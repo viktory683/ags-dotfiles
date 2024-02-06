@@ -95,3 +95,4 @@ style.css
 /eww
 scripts/lang_change.sh
 old_config.js
+.vscode/settings.json

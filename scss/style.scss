@@ -23,8 +23,8 @@ $surface: #121212;
 
 $surface24_fake: rgb(55, 55, 55);
 
-$foreground: rgba(white, .87);
-$disabled: rgba(white, .38);
+$foreground: rgba(white, 0.87);
+$disabled: rgba(white, 0.38);
 
 $primary: #bb86fc;
 $primary-variant: #3700b3;
@@ -40,11 +40,8 @@ $onyx: #404040;
     all: unset;
     font-family:
         // "Bars",
-        "Apercu Mono Pro",
-        "SF Pro Display",
-        "Font Awesome 6 Pro Solid",
-        "Font Awesome 6 Pro Regular",
-        "Font Awesome 6 Pro Brands";
+        'Apercu Mono Pro', 'SF Pro Display', 'Font Awesome 6 Pro Solid',
+        'Font Awesome 6 Pro Regular', 'Font Awesome 6 Pro Brands';
     font-size: 10.5pt;
     // font-size: 24pt;
 
@@ -55,6 +52,11 @@ $onyx: #404040;
 .media {
     background-color: transparent;
     color: #eee;
+}
+
+.fixed-hover {
+    background-color: lighten($surface, 9%);
+    transition: all 0.5s ease;
 }
 
 .workspaces button:hover,
@@ -133,39 +135,50 @@ highlight {
     min-width: 90px;
 }
 
-progressbar.vertical trough {
+progressbar.vertical {
+    margin: 3pt 0;
+}
+
+progressbar.vertical > trough {
     min-height: 1px;
-    background-color: blue;
+    min-width: 3pt;
+    // background-color: blue;
 }
 
-progressbar.vertical trough>progress {
-    // min-height: 1px;
-    background-color: red;
+progressbar.vertical > trough > progress {
+    min-height: 1pt;
+    min-width: 3pt;
+    background-color: $foreground;
 }
 
-.bar>* {
+.urgent progressbar.vertical > trough > progress {
+    background-color: red; // $surface;
+}
+
+.bar > * {
     min-height: 24pt; // like 32px
     border: 1px solid red;
 }
 
-.bar>*>*:first-child {
+.bar > * > *:first-child {
     margin-left: 3pt;
 }
 
-.bar>*>*:first-child>*:not(:first-child),
-.bar>*>*:last-child>*:not(:last-child) {
+.bar > * > *:first-child > *:not(:first-child),
+.bar > * > *:last-child > *:not(:last-child) {
     margin: 0 3pt;
-    border: 1px solid blue
+    border: 1px solid blue;
 }
-.bar>*>*:first-child>*:first-child{
+
+.bar > * > *:first-child > *:first-child {
     margin-right: 3pt;
 }
 
-.bar>*>*:last-child>*:last-child {
+.bar > * > *:last-child > *:last-child {
     margin-left: 3pt;
 }
 
-.bar>*>*:last-child {
+.bar > * > *:last-child {
     margin-right: 3pt;
 }
 
