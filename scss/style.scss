@@ -36,151 +36,84 @@ $error: #cf6679;
 $cultured: #f5f5f5;
 $onyx: #404040;
 
+@keyframes urgentin {
+    from {
+        background: $surface;
+        color: $foreground;
+    }
+    to {
+        background: $error;
+        color: black;
+    }
+}
+@keyframes urgentout {
+    from {
+        background: $error;
+        color: black;
+    }
+    to {
+        background: $surface;
+        color: $foreground;
+    }
+}
+
 * {
-    all: unset;
-    font-family:
-        // "Bars",
-        'Apercu Mono Pro', 'SF Pro Display', 'Font Awesome 6 Pro Solid',
+    all: unset; // Unsets everything so you can style everything from scratch
+    font-family: 'Bars', 'SF Pro Display', 'Font Awesome 6 Pro Solid',
         'Font Awesome 6 Pro Regular', 'Font Awesome 6 Pro Brands';
     font-size: 10.5pt;
-    // font-size: 24pt;
-
-    // border: 1px solid red;  // debug
+    // border: 1px solid red; // debug
 }
 
-.workspaces button,
-.media {
-    background-color: transparent;
-    color: #eee;
+window.bar {
+    color: $foreground;
+    background-color: $surface;
+    border-radius: 0 0 6pt 6pt;
+    // border: lighten($surface, 5) solid 1pt;
 }
 
-.fixed-hover {
-    background-color: lighten($surface, 9%);
-    transition: all 0.5s ease;
+window.bar > * {
+    margin: 3pt 1.5pt;
 }
 
-.workspaces button:hover,
-.media:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #efefef;
-}
-
-.workspaces button:active,
-.media:active {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: #fff;
-}
-
-.workspaces button.visible {
-    background-color: $secondary;
-    color: $surface;
+// widget container
+window.bar > * > * > * {
+    // border-color: blue;
+    margin-left: 1.5pt;
+    margin-right: 1.5pt;
+    // background-color: lighten($surface, 12);
+    border-radius: 3pt;
 
     &:hover {
-        background-color: lighten($secondary, 12%);
-        color: lighten($surface, 12%);
+        background-color: lighten($surface, 12);
     }
 }
 
-.workspaces button.urgent {
-    background-color: $error;
-    color: $surface;
-
-    &:hover {
-        background-color: lighten($error, 12%);
-        color: lighten($surface, 12%);
-    }
+window.bar > * > * > * > * {
+    margin: 1.5pt 3pt;
+    // border: blue solid 1pt;
 }
 
-.workspaces button.focused {
-    background-color: $primary;
-    color: $surface;
-
-    &:hover {
-        background-color: lighten($primary, 12%);
-        color: lighten($surface, 12%);
-    }
-}
-
-.client-title {
-    margin-left: 1em;
-    color: aqua;
-}
-
-.notification image {
-    color: yellow;
-    margin-left: 1em;
-}
-
-.battery progressbar {
-    margin: 0 6px;
-}
-
-.clock {
-    margin: 0 6px;
-    // font-size: 1.1em;
-}
-
-progress,
-highlight {
-    background-color: aqua;
-    min-height: 8px;
-}
-
-.bar {
-    background-color: #121212;
-    // min-height: 60px;
-}
-
-.volume {
-    min-width: 90px;
-}
+// window.bar > * > * > * > * > *:hover {
+//     border: red solid 1pt;
+// }
 
 progressbar.vertical {
+    // @include background-opacity($surface, 7%);
     margin: 3pt 0;
 }
 
 progressbar.vertical > trough {
-    min-height: 1px;
+    min-height: 1pt;
     min-width: 3pt;
-    // background-color: blue;
 }
 
 progressbar.vertical > trough > progress {
-    min-height: 1pt;
     min-width: 3pt;
     background-color: $foreground;
+    min-height: 1pt;
 }
 
 .urgent progressbar.vertical > trough > progress {
-    background-color: red; // $surface;
+    background-color: $surface;
 }
-
-.bar > * {
-    min-height: 24pt; // like 32px
-    border: 1px solid red;
-}
-
-.bar > * > *:first-child {
-    margin-left: 3pt;
-}
-
-.bar > * > *:first-child > *:not(:first-child),
-.bar > * > *:last-child > *:not(:last-child) {
-    margin: 0 3pt;
-    border: 1px solid blue;
-}
-
-.bar > * > *:first-child > *:first-child {
-    margin-right: 3pt;
-}
-
-.bar > * > *:last-child > *:last-child {
-    margin-left: 3pt;
-}
-
-.bar > * > *:last-child {
-    margin-right: 3pt;
-}
-
-// .bar>*>*>* {
-// }

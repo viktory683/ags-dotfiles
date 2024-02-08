@@ -100,7 +100,7 @@ const Workspaces = Widget.Box({
                 child: Widget.Label({
                     label: workspaceIcons[w.name] || workspaceIcons['default'],
                 }),
-                cursor: 'pointer',
+                // cursor: 'pointer',
                 class_names: [
                     'workspace',
                     'widget',
@@ -200,7 +200,7 @@ const Mode = Widget.Revealer({
     transition: 'slide_right',
     child: Widget.Button({
         on_clicked: () => execAsync('swaymsg mode default'),
-        cursor: 'pointer',
+        // cursor: 'pointer',
         child: Widget.Label().hook(swayMode, (self) => {
             let mode = swayMode.value.name;
             if (mode != 'default') self.label = mode;
@@ -285,21 +285,23 @@ const SysTray = Widget.Box({
 
 // = LANGUAGE =
 
-const lang = Variable('default', {
-    listen: [
-        `${App.configDir}/scripts/language_listener`,
-        (out) => {
-            let val = JSON.parse(out).lang;
-            return lang_alias[val] || val;
-        },
-    ],
-});
+const lang = Variable(
+    { lang: '' },
+    {
+        listen: [
+            `${App.configDir}/scripts/language_listener`,
+            (out) => JSON.parse(out),
+        ],
+    },
+);
 
 const Language = Widget.Button({
     on_clicked: () =>
         execAsync('swaymsg input type:keyboard xkb_switch_layout next'),
     class_names: ['widget'],
-    child: Widget.Label().bind('label', lang),
+    child: Widget.Label()
+        .bind('label', lang, 'value', (v) => lang_alias[v.lang] || v.lang)
+        .bind('tooltip_text', lang, 'value', (v) => v.lang),
 });
 
 ////////
@@ -940,7 +942,6 @@ const Right = Widget.Box({
 const Bar = (monitor: number = 0) =>
     Widget.Window({
         child: Widget.CenterBox({
-            class_names: ['window, bar'],
             start_widget: Left,
             center_widget: Center,
             end_widget: Right,
@@ -953,21 +954,14 @@ const Bar = (monitor: number = 0) =>
         // margins: [8, 6],  // just like in CSS
         monitor: monitor,
         // popup: true,  // requires `focusable` I think
-        // class_name: 'bar',
-        class_names: ['background', 'bar'],
-        // css: "",
+        class_names: ['bar'],
         // hpack: "",
         // vpack: "",
         // cursor: "pointer",
         // hexpand: true,
         // vexpand: true,
         // sensitive: true,
-        // tooltipText: "".
-        // visible: true,  // no effect if parent calls show_all()
-        // properties:  // TODO
-        // connection:  // TODO
-        // binds:  // TODO
-        // setup:  // TODO
+        // tooltipText: "",
     });
 
 export default {
