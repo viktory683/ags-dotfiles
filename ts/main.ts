@@ -43,7 +43,7 @@ import {
 } from './helpers';
 import { Connectable } from 'resource:///com/github/Aylur/ags/widgets/widget.js';
 import AgsButton from 'types/widgets/button';
-import { Workspace, process_subscribe_workspaces } from './sway';
+import { Workspace, process_workspace_event } from './sway';
 import { Variable as Vartype } from 'types/variable';
 import brightness from './service/brightness.js';
 
@@ -86,7 +86,7 @@ const swayWorkspaces: Vartype<Workspace[]> = Variable(
     {
         listen: [
             `swaymsg -t subscribe '["workspace"]' -m -r`,
-            (out) => process_subscribe_workspaces(swayWorkspaces.value, out),
+            (out) => process_workspace_event(swayWorkspaces.value, out),
         ],
     },
 );
