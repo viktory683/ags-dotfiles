@@ -1,5 +1,5 @@
 import App from 'resource:///com/github/Aylur/ags/app.js';
-import { battery as BATTERY } from 'resource:///com/github/Aylur/ags/service/battery.js';
+import battery from 'resource:///com/github/Aylur/ags/service/battery.js';
 import {
     exec,
     execAsync,
@@ -8,48 +8,27 @@ import {
 } from 'resource:///com/github/Aylur/ags/utils.js';
 import Variable from 'resource:///com/github/Aylur/ags/variable.js';
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
+import { Connectable } from 'resource:///com/github/Aylur/ags/widgets/widget.js';
 import SystemTray from 'resource:///com/github/Aylur/ags/service/systemtray.js';
 import Mpris from 'resource:///com/github/Aylur/ags/service/mpris.js';
-import {
-    alert_icon,
-    brightness_icon,
-    battery_charging_icon,
-    battery_icons,
-    bluetooth_icon,
-    cpu_icon,
-    css_path,
-    lang_alias,
-    memory_icon,
-    mic_icon,
-    muted_icon,
-    network_disabled,
-    network_icons,
-    player_icons,
-    scratchpad_icon,
-    scss_path,
-    silent_icon,
-    temp_path,
-    temperature_icons,
-    temperature_max,
-    temperature_min,
-    volume_icons,
-    workspaceIcons,
-    network_interface,
-} from './defaults';
+import AgsButton from 'types/widgets/button';
+import { Variable as Variable_t } from 'types/variable';
+import config from './config';
 import {
     InputDevice,
-    Node,
+    TreeNode,
     XkbLayoutChange,
+    mode_event_t,
+    mode_t,
+} from './types/sway';
+import {
     getIconByPercentage as getIconFromArray,
     reloadCSS,
     removeItem,
     term,
 } from './helpers';
-import { Connectable } from 'resource:///com/github/Aylur/ags/widgets/widget.js';
-import AgsButton from 'types/widgets/button';
-import { Workspace, process_workspace_event } from './sway';
-import { Variable as Variable_t } from 'types/variable';
 import brightness from './service/brightness.js';
+import { Workspace, process_workspace_event } from './sway';
 
 reloadCSS();
 subprocess(
@@ -59,7 +38,7 @@ subprocess(
         '--event',
         'create,modify',
         '-m',
-        scss_path.split('/').slice(0, -1).join('/'),
+        config.CSS.paths.scss.split('/').slice(0, -1).join('/'),
     ],
     () => {
         let f = reloadCSS();
@@ -68,20 +47,6 @@ subprocess(
         console.log('CSS UPDATED');
     },
 );
-
-// TODO
-// workspaces
-// scratchpad
-// media?
-// - - -
-// time date combined with notification window
-// - - -
-// tray (maybe do it like in windows, like open small popup with all stuff)
-// some sensors (temperature, memory, cpu)
-// sound
-// network
-// power (shows battery icon but opens sub window on click) (the same window should be opened on Win+Esc)
-//     - reboot/sleep/lock/exit/poweroff
 
 // = WORKSPACES =
 
@@ -102,7 +67,9 @@ const Workspaces = Widget.Box({
         Widget.Button({
             on_clicked: () => execAsync(`swaymsg workspace ${w.name}`),
             child: Widget.Label({
-                label: workspaceIcons[w.name] || workspaceIcons['default'],
+                label:
+                    config.workspaces.icons[w.name] ||
+                    config.workspaces.icons['default'],
             }),
             class_names: [
                 'workspace',
@@ -121,7 +88,7 @@ const Workspaces = Widget.Box({
 
 // TODO this is some shitty code
 function get_scratch_windows(): number {
-    let tree: Node = JSON.parse(exec('i3-msg -t get_tree -r'));
+    let tree: TreeNode = JSON.parse(exec('i3-msg -t get_tree -r'));
 
     let nodes = tree.nodes;
     if (nodes) {
@@ -172,7 +139,7 @@ const Scratchpad = Widget.Button({
     child: Widget.Box({
         class_names: ['scratchpad'],
         children: [
-            Widget.Label({ label: scratchpad_icon }),
+            Widget.Label({ label: config.scratchpad.icon }),
             Widget.Revealer({
                 class_names: ['revealer'],
                 transition: 'slide_right',
@@ -204,13 +171,6 @@ const Scratchpad = Widget.Button({
 
 // = MODE =
 
-type mode_t = {
-    name: string;
-};
-type mode_event_t = {
-    change: string;
-    pango_markup: boolean;
-};
 const swayMode: Variable_t<mode_t> = Variable(
     JSON.parse(await execAsync('i3-msg -t get_binding_state -r')),
     {
@@ -266,13 +226,7 @@ const Media = Widget.Button({
             // console.log(player);
             let status = player.play_back_status;
 
-            let statusIcon = status
-                ? {
-                      Playing: player_icons.play,
-                      Paused: player_icons.pause,
-                      Stopped: player_icons.stop,
-                  }[status]
-                : '';
+            let statusIcon = status ? config.player[status] : '';
 
             return `${statusIcon} ${(player.track_artists || []).join(
                 ', ',
@@ -350,7 +304,7 @@ const Language = Widget.Button({
         execAsync('swaymsg input type:keyboard xkb_switch_layout next'),
     class_names: ['widget'],
     child: Widget.Label()
-        .bind('label', lang, 'value', (v) => lang_alias[v] || v)
+        .bind('label', lang, 'value', (v) => config.language.icons[v] || v)
         .bind('tooltip_text', lang),
 });
 
@@ -362,7 +316,7 @@ const TEMPERATURE = Variable(0, {
     poll: [
         2000,
         () => {
-            return parseInt(readFile(temp_path).trim()) / 1000;
+            return parseInt(readFile(config.temperature.path).trim()) / 1000;
         },
     ],
 });
@@ -381,7 +335,7 @@ function updateTempClasses(obj: Connectable<AgsButton> & AgsButton) {
         obj.class_names = removeItem(obj.class_names, 'fixed-hover');
     }
 
-    if (TEMPERATURE.value > temperature_max) {
+    if (TEMPERATURE.value > config.temperature.max) {
         obj.class_names = [...obj.class_names, 'urgent'];
     } else {
         obj.class_names = removeItem(obj.class_names, 'urgent');
@@ -399,10 +353,10 @@ const Temperature = Widget.Button({
         children: [
             Widget.Label().bind('label', TEMPERATURE, 'value', (v) => {
                 return getIconFromArray(
-                    temperature_icons.split(''),
+                    config.temperature.icons.split(''),
                     v,
-                    temperature_min,
-                    temperature_max,
+                    config.temperature.min,
+                    config.temperature.max,
                 );
             }),
             Widget.Revealer({
@@ -485,7 +439,7 @@ const Memory = Widget.Button({
     child: Widget.Box({
         class_names: ['memory'],
         children: [
-            Widget.Label({ label: memory_icon }),
+            Widget.Label({ label: config.memory.icon }),
             Widget.Revealer({
                 transition: 'slide_right',
                 transition_duration: 500,
@@ -601,7 +555,7 @@ const CPU = Widget.Button({
     child: Widget.Box({
         class_names: ['cpu'],
         children: [
-            Widget.Label({ label: cpu_icon }),
+            Widget.Label({ label: config.cpu.icon }),
             Widget.Revealer({
                 class_names: ['revealer'],
                 transition: 'slide_right',
@@ -667,7 +621,7 @@ const Brightness = Widget.Button({
     child: Widget.Box({
         class_names: ['brightness'],
         children: [
-            Widget.Label({ label: brightness_icon }),
+            Widget.Label({ label: config.brightness.icon }),
             Widget.Revealer({
                 transition: 'slide_right',
                 transition_duration: 500,
@@ -759,7 +713,7 @@ const Volume = Widget.Button({
         spacing: 2,
         class_names: ['pulseaudio'],
         children: [
-            Widget.Label({ label: bluetooth_icon }).bind(
+            Widget.Label({ label: config.volume.bluetooth }).bind(
                 'visible',
                 VOLUME,
                 'value',
@@ -767,17 +721,17 @@ const Volume = Widget.Button({
             ),
             Widget.Label().bind('label', VOLUME, 'value', (v) => {
                 if (v['sink']['mute']) {
-                    return muted_icon;
+                    return config.volume.muted;
                 }
 
                 let vol = Math.round(v['sink']['volume']);
                 if (vol == 0) {
-                    return silent_icon;
+                    return config.volume.silent;
                 }
                 if (vol > 100) {
-                    return alert_icon;
+                    return config.volume.alert;
                 }
-                return getIconFromArray(volume_icons.split(''), vol);
+                return getIconFromArray(config.volume.icons.split(''), vol);
             }),
             Widget.Revealer({
                 reveal_child: false,
@@ -799,13 +753,13 @@ const Volume = Widget.Button({
                 ),
             Widget.Box({
                 children: [
-                    Widget.Label({ label: bluetooth_icon }).bind(
+                    Widget.Label({ label: config.volume.bluetooth }).bind(
                         'visible',
                         VOLUME,
                         'value',
                         (v) => v['source']['bluez'],
                     ),
-                    Widget.Label({ label: mic_icon }),
+                    Widget.Label({ label: config.volume.mic }),
                 ],
             }).bind('visible', VOLUME, 'value', (v) => !v['source']['mute']),
         ],
@@ -822,7 +776,7 @@ const Volume = Widget.Button({
 const NETWORK: Variable_t<null | number> = Variable(null, {
     poll: [
         2000,
-        `jc iw dev ${network_interface} link`,
+        `jc iw dev ${config.network.interface} link`,
         (out) => {
             let data = JSON.parse(out);
             if (data.length == 0) return null;
@@ -865,8 +819,8 @@ const Network = Widget.Button({
         children: [
             Widget.Label().bind('label', NETWORK, 'value', (v) =>
                 v == null
-                    ? network_disabled
-                    : getIconFromArray(network_icons.split(''), v),
+                    ? config.network.disabled
+                    : getIconFromArray(config.network.icons.split(''), v),
             ),
             Widget.Revealer({
                 transition: 'slide_right',
@@ -909,8 +863,8 @@ function updateBatteryClasses(obj: Connectable<AgsButton> & AgsButton) {
     }
 
     if (
-        BATTERY.percent <= 10 && // TODO move urgent battery percent to config
-        !BATTERY.charging
+        battery.percent <= 10 && // TODO move urgent battery percent to config
+        !battery.charging
     ) {
         obj.class_names = [...obj.class_names, 'urgent'];
     } else {
@@ -927,15 +881,15 @@ const Battery = Widget.Button({
     child: Widget.Box({
         class_names: ['battery'],
         children: [
-            Widget.Label().hook(BATTERY, (self) => {
-                if (BATTERY.charging) {
-                    self.label = battery_charging_icon;
+            Widget.Label().hook(battery, (self) => {
+                if (battery.charging) {
+                    self.label = config.battery.charging;
                     return;
                 }
 
                 self.label = getIconFromArray(
-                    battery_icons.split(''),
-                    BATTERY.percent,
+                    config.battery.icons.split(''),
+                    battery.percent,
                 );
             }),
             Widget.Revealer({
@@ -944,7 +898,7 @@ const Battery = Widget.Button({
                 class_names: ['revealer'],
                 child: Widget.Label().bind(
                     'label',
-                    BATTERY,
+                    battery,
                     'percent',
                     (v) => `${Math.round(v)}%`,
                 ),
@@ -958,7 +912,7 @@ const Battery = Widget.Button({
 })
     .hook(show_battery, (self) => updateBatteryClasses(self))
     .hook(show_battery_fixed, (self) => updateBatteryClasses(self))
-    .hook(BATTERY, (self) => updateBatteryClasses(self));
+    .hook(battery, (self) => updateBatteryClasses(self));
 
 ////////
 
@@ -1018,32 +972,6 @@ const Bar = (monitor: number = 0) =>
     });
 
 export default {
-    style: css_path,
+    style: config.CSS.paths.css,
     windows: [Bar()],
 };
-
-// // TODO
-// // we don't need dunst or any other notification daemon
-// // because the Notifications module is a notification daemon itself
-// function Notification() {
-//     return Widget.Box({
-//         className: 'notification',
-//         children: [
-//             Widget.Icon({
-//                 icon: 'preferences-system-notifications-symbolic',
-//                 connections: [[
-//                     Notifications,
-//                     self => self.visible = Notifications.popups.length > 0
-//                 ]],
-//             }),
-//             Widget.Label({
-//                 connections: [[
-//                     Notifications,
-//                     self => {
-//                         self.label = Notifications.popups[0]?.summary || '';
-//                     }
-//                 ]],
-//             }),
-//         ],
-//     });
-// }
