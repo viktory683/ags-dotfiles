@@ -23,8 +23,8 @@ $surface: #121212;
 
 $surface24_fake: rgb(55, 55, 55);
 
-$foreground: rgba(white, .87);
-$disabled: rgba(white, .38);
+$foreground: rgba(white, 0.87);
+$disabled: rgba(white, 0.38);
 
 $primary: #bb86fc;
 $primary-variant: #3700b3;
@@ -36,50 +36,62 @@ $error: #cf6679;
 $cultured: #f5f5f5;
 $onyx: #404040;
 
-* {
-    all: unset;
-    font-family:
-        // "Bars",
-        "Apercu Mono Pro",
-        "SF Pro Display",
-        "Font Awesome 6 Pro Solid",
-        "Font Awesome 6 Pro Regular",
-        "Font Awesome 6 Pro Brands";
-    font-size: 10.5pt;
-    // font-size: 24pt;
-
-    // border: 1px solid red;  // debug
+@keyframes urgentin {
+    from {
+        background: $surface;
+        color: $foreground;
+    }
+    to {
+        background: $error;
+        color: black;
+    }
 }
-
-.workspaces button,
-.media {
-    background-color: transparent;
-    color: #eee;
-}
-
-.workspaces button:hover,
-.media:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #efefef;
-}
-
-.workspaces button:active,
-.media:active {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: #fff;
-}
-
-.workspaces button.visible {
-    background-color: $secondary;
-    color: $surface;
-
-    &:hover {
-        background-color: lighten($secondary, 12%);
-        color: lighten($surface, 12%);
+@keyframes urgentout {
+    from {
+        background: $error;
+        color: black;
+    }
+    to {
+        background: $surface;
+        color: $foreground;
     }
 }
 
-.workspaces button.urgent {
+* {
+    all: unset; // Unsets everything so you can style everything from scratch
+    font-family: 'Bars', 'SF Pro Display', 'Font Awesome 6 Pro Solid',
+        'Font Awesome 6 Pro Regular', 'Font Awesome 6 Pro Brands';
+    font-size: 10.5pt;
+    // border: 1px solid red; // debug
+}
+
+window.bar {
+    color: $foreground;
+    background-color: $surface;
+    border-radius: 0 0 6pt 6pt;
+    // border: lighten($surface, 5) solid 1pt;
+}
+
+window.bar > * {
+    margin: 3pt 1.5pt;
+}
+
+// widget container
+window.bar > * > * > *,
+.workspace {
+    // border-color: blue;
+    margin-left: 1.5pt;
+    margin-right: 1.5pt;
+    // background-color: lighten($surface, 12);
+    border-radius: 3pt;
+
+    &:hover {
+        background-color: lighten($surface, 12);
+        color: lighten($foreground, 12%);
+    }
+}
+
+.urgent {
     background-color: $error;
     color: $surface;
 
@@ -89,7 +101,7 @@ $onyx: #404040;
     }
 }
 
-.workspaces button.focused {
+.workspace.focused {
     background-color: $primary;
     color: $surface;
 
@@ -99,75 +111,32 @@ $onyx: #404040;
     }
 }
 
-.client-title {
-    margin-left: 1em;
-    color: aqua;
+window.bar > * > * > * > *,
+.workspace > * {
+    margin: 1.5pt 3pt;
+    // border: blue solid 1pt;
 }
 
-.notification image {
-    color: yellow;
-    margin-left: 1em;
-}
-
-.battery progressbar {
-    margin: 0 6px;
-}
-
-.clock {
-    margin: 0 6px;
-    // font-size: 1.1em;
-}
-
-progress,
-highlight {
-    background-color: aqua;
-    min-height: 8px;
-}
-
-.bar {
-    background-color: #121212;
-    // min-height: 60px;
-}
-
-.volume {
-    min-width: 90px;
-}
-
-progressbar.vertical trough {
-    min-height: 1px;
-    background-color: blue;
-}
-
-progressbar.vertical trough>progress {
-    // min-height: 1px;
-    background-color: red;
-}
-
-.bar>* {
-    min-height: 24pt; // like 32px
-    border: 1px solid red;
-}
-
-.bar>*>*:first-child {
-    margin-left: 3pt;
-}
-
-.bar>*>*:first-child>*:not(:first-child),
-.bar>*>*:last-child>*:not(:last-child) {
-    margin: 0 3pt;
-    border: 1px solid blue
-}
-.bar>*>*:first-child>*:first-child{
-    margin-right: 3pt;
-}
-
-.bar>*>*:last-child>*:last-child {
-    margin-left: 3pt;
-}
-
-.bar>*>*:last-child {
-    margin-right: 3pt;
-}
-
-// .bar>*>*>* {
+// window.bar > * > * > * > * > *:hover {
+//     border: red solid 1pt;
 // }
+
+progressbar.vertical {
+    // @include background-opacity($surface, 7%);
+    margin: 3pt 0;
+}
+
+progressbar.vertical > trough {
+    min-height: 1pt;
+    min-width: 3pt;
+}
+
+progressbar.vertical > trough > progress {
+    min-width: 3pt;
+    background-color: $foreground;
+    min-height: 1pt;
+}
+
+.urgent progressbar.vertical > trough > progress {
+    background-color: $surface;
+}
