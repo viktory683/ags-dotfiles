@@ -43,6 +43,8 @@ import {
 } from './helpers';
 import { Connectable } from 'resource:///com/github/Aylur/ags/widgets/widget.js';
 import AgsButton from 'types/widgets/button';
+import { Workspace, process_subscribe_workspaces } from './sway';
+import { Variable as Vartype } from 'types/variable';
 
 reloadCSS();
 subprocess(
@@ -78,37 +80,33 @@ subprocess(
 
 // = WORKSPACES =
 
-const swayWorkspaces = Variable([], {
-    listen: [
-        `${App.configDir}/scripts/workspaces_listener`,
-        (out) => JSON.parse(out),
-    ],
-});
+const swayWorkspaces: Vartype<Workspace[]> = Variable(
+    JSON.parse(await execAsync('swaymsg -t get_workspaces -r'.split(' '))),
+    {
+        listen: [
+            `swaymsg -t subscribe '["workspace"]' -m -r`,
+            (out) => process_subscribe_workspaces(swayWorkspaces.value, out),
+        ],
+    },
+);
 
 const Workspaces = Widget.Box({
     class_names: ['workspaces'],
 }).bind('children', swayWorkspaces, 'value', (v) =>
-    v.map(
-        (w: {
-            name: string | number;
-            focused: any;
-            visible: any;
-            urgent: any;
-        }) =>
-            Widget.Button({
-                on_clicked: () => execAsync(`swaymsg workspace ${w.name}`),
-                child: Widget.Label({
-                    label: workspaceIcons[w.name] || workspaceIcons['default'],
-                }),
-                // cursor: 'pointer',
-                class_names: [
-                    'workspace',
-                    'widget',
-                    `${w.focused ? 'focused' : ''}`,
-                    `${w.visible ? 'visible' : ''}`,
-                    `${w.urgent ? 'urgent' : ''}`,
-                ],
+    v.map((w) =>
+        Widget.Button({
+            on_clicked: () => execAsync(`swaymsg workspace ${w.name}`),
+            child: Widget.Label({
+                label: workspaceIcons[w.name] || workspaceIcons['default'],
             }),
+            class_names: [
+                'workspace',
+                'widget',
+                `${w.focused ? 'focused' : ''}`,
+                `${w.visible ? 'visible' : ''}`,
+                `${w.urgent ? 'urgent' : ''}`,
+            ],
+        }),
     ),
 );
 

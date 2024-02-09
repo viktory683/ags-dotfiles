@@ -77,7 +77,8 @@ window.bar > * {
 }
 
 // widget container
-window.bar > * > * > * {
+window.bar > * > * > *,
+.workspace {
     // border-color: blue;
     margin-left: 1.5pt;
     margin-right: 1.5pt;
@@ -86,10 +87,32 @@ window.bar > * > * > * {
 
     &:hover {
         background-color: lighten($surface, 12);
+        color: lighten($foreground, 12%);
     }
 }
 
-window.bar > * > * > * > * {
+.urgent {
+    background-color: $error;
+    color: $surface;
+
+    &:hover {
+        background-color: lighten($error, 12%);
+        color: lighten($surface, 12%);
+    }
+}
+
+.workspace.focused {
+    background-color: $primary;
+    color: $surface;
+
+    &:hover {
+        background-color: lighten($primary, 12%);
+        color: lighten($surface, 12%);
+    }
+}
+
+window.bar > * > * > * > *,
+.workspace > * {
     margin: 1.5pt 3pt;
     // border: blue solid 1pt;
 }
