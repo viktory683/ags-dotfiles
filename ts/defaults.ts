@@ -16,7 +16,7 @@ export const memory_icon = '';
 
 export const cpu_icon = '';
 
-export const backlight_icon = '';
+export const brightness_icon = '';
 
 export const network_icons = '';
 export const network_disabled = '';

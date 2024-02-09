@@ -12,7 +12,7 @@ import SystemTray from 'resource:///com/github/Aylur/ags/service/systemtray.js';
 import Mpris from 'resource:///com/github/Aylur/ags/service/mpris.js';
 import {
     alert_icon,
-    backlight_icon,
+    brightness_icon,
     battery_charging_icon,
     battery_icons,
     bluetooth_icon,
@@ -45,6 +45,7 @@ import { Connectable } from 'resource:///com/github/Aylur/ags/widgets/widget.js'
 import AgsButton from 'types/widgets/button';
 import { Workspace, process_subscribe_workspaces } from './sway';
 import { Variable as Vartype } from 'types/variable';
+import brightness from './service/brightness.js';
 
 reloadCSS();
 subprocess(
@@ -583,45 +584,34 @@ const CPU = Widget.Button({
 
 ////////
 
-// = BACKLIGHT =
+// = BRIGHTNESS =
 
-const BACKLIGHT = Variable(0, {
-    poll: [
-        1000,
-        'brightnessctl -m -d intel_backlight -e',
-        (out) => {
-            let str = out.trim().split(',')[3];
-            return parseInt(str.substring(0, str.length - 1));
-        },
-    ],
-});
+const show_brightness = Variable(false);
+const show_brightness_fixed = Variable(false);
 
-const show_backlight = Variable(false);
-const show_backlight_fixed = Variable(false);
-
-function revealBack() {
-    return show_backlight.value || show_backlight_fixed.value;
+function revealBrightness() {
+    return show_brightness.value || show_brightness_fixed.value;
 }
 
-function updateBacklightClasses(obj: Connectable<AgsButton> & AgsButton) {
-    if (show_backlight.value || show_backlight_fixed.value) {
+function updateBrightnessClasses(obj: Connectable<AgsButton> & AgsButton) {
+    if (show_brightness.value || show_brightness_fixed.value) {
         obj.class_names = [...obj.class_names, 'fixed-hover'];
     } else {
         obj.class_names = removeItem(obj.class_names, 'fixed-hover');
     }
 }
 
-const Backlight = Widget.Button({
-    on_hover: () => (show_backlight.value = true),
-    on_hover_lost: () => (show_backlight.value = false),
+const Brightness = Widget.Button({
+    on_hover: () => (show_brightness.value = true),
+    on_hover_lost: () => (show_brightness.value = false),
     on_middle_click: () =>
-        (show_backlight_fixed.value = !show_backlight_fixed.value),
+        (show_brightness_fixed.value = !show_brightness_fixed.value),
     on_scroll_up: () => execAsync('brightnessctl -e s 1-%'),
     on_scroll_down: () => execAsync('brightnessctl -e s 1+%'),
     child: Widget.Box({
-        class_names: ['backlight'],
+        class_names: ['brightness'],
         children: [
-            Widget.Label({ label: backlight_icon }),
+            Widget.Label({ label: brightness_icon }),
             Widget.Revealer({
                 transition: 'slide_right',
                 transition_duration: 500,
@@ -630,20 +620,20 @@ const Backlight = Widget.Button({
                     vertical: true,
                     inverted: true,
                     class_names: ['progress', 'vertical'],
-                }).bind('value', BACKLIGHT, 'value', (v) => v / 100),
+                }).bind('value', brightness, 'screen_value'),
             })
-                .bind('reveal_child', show_backlight, 'value', (_) =>
-                    revealBack(),
+                .bind('reveal_child', show_brightness, 'value', (_) =>
+                    revealBrightness(),
                 )
-                .bind('reveal_child', show_backlight_fixed, 'value', (_) =>
-                    revealBack(),
+                .bind('reveal_child', show_brightness_fixed, 'value', (_) =>
+                    revealBrightness(),
                 ),
         ],
     }),
 })
-    .bind('visible', BACKLIGHT, 'value', (v) => v < 99)
-    .hook(show_backlight, (self) => updateBacklightClasses(self))
-    .hook(show_backlight_fixed, (self) => updateBacklightClasses(self));
+    .bind('visible', brightness, 'screen_value', (v) => v < 1)
+    .hook(show_brightness, (self) => updateBrightnessClasses(self))
+    .hook(show_brightness_fixed, (self) => updateBrightnessClasses(self));
 
 ////////
 
@@ -930,7 +920,7 @@ const Right = Widget.Box({
         Temperature,
         Memory,
         CPU,
-        Backlight,
+        Brightness,
         Volume,
         Network,
         Battery,
