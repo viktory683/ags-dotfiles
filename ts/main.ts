@@ -34,8 +34,12 @@ import {
     temperature_min,
     volume_icons,
     workspaceIcons,
+    network_interface,
 } from './defaults';
 import {
+    InputDevice,
+    Node,
+    XkbLayoutChange,
     getIconByPercentage as getIconFromArray,
     reloadCSS,
     removeItem,
@@ -44,7 +48,7 @@ import {
 import { Connectable } from 'resource:///com/github/Aylur/ags/widgets/widget.js';
 import AgsButton from 'types/widgets/button';
 import { Workspace, process_workspace_event } from './sway';
-import { Variable as Vartype } from 'types/variable';
+import { Variable as Variable_t } from 'types/variable';
 import brightness from './service/brightness.js';
 
 reloadCSS();
@@ -81,11 +85,11 @@ subprocess(
 
 // = WORKSPACES =
 
-const swayWorkspaces: Vartype<Workspace[]> = Variable(
-    JSON.parse(await execAsync('swaymsg -t get_workspaces -r'.split(' '))),
+const swayWorkspaces: Variable_t<Workspace[]> = Variable(
+    JSON.parse(await execAsync('i3-msg -t get_workspaces -r'.split(' '))),
     {
         listen: [
-            `swaymsg -t subscribe '["workspace"]' -m -r`,
+            `i3-msg -t subscribe '["workspace"]' -m -r`,
             (out) => process_workspace_event(swayWorkspaces.value, out),
         ],
     },
@@ -115,10 +119,26 @@ const Workspaces = Widget.Box({
 
 // = SCRATCHPAD =
 
-const swayScratchpad = Variable(0, {
+// TODO this is some shitty code
+function get_scratch_windows(): number {
+    let tree: Node = JSON.parse(exec('i3-msg -t get_tree -r'));
+
+    let nodes = tree.nodes;
+    if (nodes) {
+        nodes = nodes.filter((n) => n.name == '__i3')[0].nodes;
+        if (nodes) {
+            let floating_nodes = nodes.filter(
+                (n) => n.name == '__i3_scratch',
+            )[0].floating_nodes;
+            if (floating_nodes) return floating_nodes.length;
+        }
+    }
+    return 0;
+}
+const sway_scratchpad = Variable(get_scratch_windows(), {
     listen: [
-        `${App.configDir}/scripts/scratchpad_listener`,
-        (out) => parseInt(out),
+        `i3-msg -t subscribe '["workspace","window"]' -m -r`,
+        (_) => get_scratch_windows(),
     ],
 });
 
@@ -129,7 +149,7 @@ function revealScratchpad() {
     return (
         show_scratchpad.value ||
         show_scratchpad_fixed.value ||
-        swayScratchpad.value > 0
+        sway_scratchpad.value > 0
     );
 }
 
@@ -137,7 +157,7 @@ function updateScratchpadClasses(obj: Connectable<AgsButton> & AgsButton) {
     if (
         show_scratchpad.value ||
         show_scratchpad_fixed.value ||
-        swayScratchpad.value > 0
+        sway_scratchpad.value > 0
     ) {
         obj.class_names = [...obj.class_names, 'fixed-hover'];
     } else {
@@ -159,7 +179,7 @@ const Scratchpad = Widget.Button({
                 transition_duration: 500,
                 child: Widget.Label().bind(
                     'label',
-                    swayScratchpad,
+                    sway_scratchpad,
                     'value',
                     (v) => `${v}`,
                 ),
@@ -170,13 +190,13 @@ const Scratchpad = Widget.Button({
                 .bind('reveal_child', show_scratchpad_fixed, 'value', () =>
                     revealScratchpad(),
                 )
-                .bind('reveal_child', swayScratchpad, 'value', () =>
+                .bind('reveal_child', sway_scratchpad, 'value', () =>
                     revealScratchpad(),
                 ),
         ],
     }),
 })
-    .hook(swayScratchpad, (btn) => updateScratchpadClasses(btn))
+    .hook(sway_scratchpad, (btn) => updateScratchpadClasses(btn))
     .hook(show_scratchpad, (btn) => updateScratchpadClasses(btn))
     .hook(show_scratchpad_fixed, (btn) => updateScratchpadClasses(btn));
 
@@ -184,12 +204,22 @@ const Scratchpad = Widget.Button({
 
 // = MODE =
 
-const swayMode = Variable(
-    { name: 'default' },
+type mode_t = {
+    name: string;
+};
+type mode_event_t = {
+    change: string;
+    pango_markup: boolean;
+};
+const swayMode: Variable_t<mode_t> = Variable(
+    JSON.parse(await execAsync('i3-msg -t get_binding_state -r')),
     {
         listen: [
-            `${App.configDir}/scripts/mode_listener`,
-            (out) => JSON.parse(out),
+            `i3-msg -t subscribe "['mode']" -m -r`,
+            (out) => {
+                let mode_event: mode_event_t = JSON.parse(out);
+                return { name: mode_event.change };
+            },
         ],
     },
 );
@@ -284,23 +314,44 @@ const SysTray = Widget.Box({
 
 // = LANGUAGE =
 
-const lang = Variable(
-    { lang: '' },
+// TODO this is some shitty code
+function get_active_layout_name(): string {
+    let out: InputDevice[] = JSON.parse(exec('swaymsg -t get_inputs -r'));
+    let layout = out.filter(
+        (i) => i.type == 'keyboard' && i.xkb_layout_names,
+    )[0].xkb_active_layout_name;
+    if (layout) return layout;
+    return '';
+}
+const input_event: Variable_t<XkbLayoutChange> = Variable(
+    {},
     {
         listen: [
-            `${App.configDir}/scripts/language_listener`,
+            `i3-msg -t subscribe '["input"]' -m -r`,
             (out) => JSON.parse(out),
         ],
     },
 );
+input_event.connect('changed', ({ value }) => {
+    if (value.change != 'xkb_layout') {
+        return;
+    }
+
+    let current_layout = value.input.xkb_active_layout_name;
+    if (current_layout != lang.value) {
+        lang.value = current_layout;
+    }
+});
+
+const lang = Variable(get_active_layout_name());
 
 const Language = Widget.Button({
     on_clicked: () =>
         execAsync('swaymsg input type:keyboard xkb_switch_layout next'),
     class_names: ['widget'],
     child: Widget.Label()
-        .bind('label', lang, 'value', (v) => lang_alias[v.lang] || v.lang)
-        .bind('tooltip_text', lang, 'value', (v) => v.lang),
+        .bind('label', lang, 'value', (v) => lang_alias[v] || v)
+        .bind('tooltip_text', lang),
 });
 
 ////////
@@ -384,7 +435,7 @@ const Temperature = Widget.Button({
 
 const MEMORY = Variable([], {
     poll: [
-        1000,
+        2000,
         () => {
             return JSON.parse(exec('jc free -tvw --si'));
         },
@@ -446,24 +497,28 @@ const Memory = Widget.Button({
                             inverted: true,
                             class_names: ['progress', 'vertical'],
                         }).bind('value', MEMORY, 'value', (v) => {
-                            let t = v.filter((obj) => obj.type == 'Mem')[0];
+                            let t = v.filter(
+                                (obj: { type: string }) => obj.type == 'Mem',
+                            )[0];
                             let val = 0;
                             if (t) {
                                 val = t.used / t.total;
                             }
-                            return `${val}`;
+                            return val;
                         }),
                         Widget.ProgressBar({
                             vertical: true,
                             inverted: true,
                             class_names: ['progress', 'vertical'],
                         }).bind('value', MEMORY, 'value', (v) => {
-                            let t = v.filter((obj) => obj.type == 'Swap')[0];
+                            let t = v.filter(
+                                (obj: { type: string }) => obj.type == 'Swap',
+                            )[0];
                             let val = 0;
                             if (t) {
                                 val = t.used / t.total;
                             }
-                            return `${val}`;
+                            return val;
                         }),
                     ],
                 }),
@@ -490,7 +545,8 @@ const Memory = Widget.Button({
 const wrap_mpstat = (out: string) => {
     return {
         avg: JSON.parse(out).filter(
-            (core) => core.time && core.cpu == 'all',
+            (core: { time: string | undefined; cpu: string }) =>
+                core.time && core.cpu == 'all',
         )[0],
         cores: JSON.parse(out)
             .filter(
@@ -763,8 +819,17 @@ const Volume = Widget.Button({
 
 // = NETWORK =
 
-const NETWORK = Variable(0, {
-    poll: [1000, `${App.configDir}/scripts/netpoll.sh`, (out) => parseInt(out)],
+const NETWORK: Variable_t<null | number> = Variable(null, {
+    poll: [
+        2000,
+        `jc iw dev ${network_interface} link`,
+        (out) => {
+            let data = JSON.parse(out);
+            if (data.length == 0) return null;
+
+            return Math.round(2 * (data[0].signal_dbm + 100));
+        },
+    ],
 });
 
 const show_network = Variable(false);
@@ -781,7 +846,7 @@ function updateNetworkClasses(obj: Connectable<AgsButton> & AgsButton) {
         obj.class_names = removeItem(obj.class_names, 'fixed-hover');
     }
 
-    if (isNaN(NETWORK.value)) {
+    if (NETWORK.value == null) {
         obj.class_names = [...obj.class_names, 'disabled'];
     } else {
         obj.class_names = removeItem(obj.class_names, 'disabled');
@@ -799,9 +864,9 @@ const Network = Widget.Button({
         class_names: ['network'],
         children: [
             Widget.Label().bind('label', NETWORK, 'value', (v) =>
-                isNaN(v)
+                v == null
                     ? network_disabled
-                    : getIconFromArray(network_icons.split(''), v, 0, 70),
+                    : getIconFromArray(network_icons.split(''), v),
             ),
             Widget.Revealer({
                 transition: 'slide_right',
@@ -811,14 +876,14 @@ const Network = Widget.Button({
                     'label',
                     NETWORK,
                     'value',
-                    (v) => `${Math.round(100 * (v / 70))}%`,
+                    (v) => `${v}%`,
                 ),
             })
                 .bind('reveal_child', show_network, 'value', (_) => revealNet())
                 .bind('reveal_child', show_network_fixed, 'value', (_) =>
                     revealNet(),
                 )
-                .bind('visible', NETWORK, 'value', (v) => !isNaN(v)),
+                .bind('visible', NETWORK, 'value', (v) => v != null),
         ],
     }),
 })

@@ -20,6 +20,7 @@ export const brightness_icon = '';
 
 export const network_icons = '';
 export const network_disabled = '';
+export const network_interface = 'wlan0';
 
 export const bluetooth_icon = '';
 export const muted_icon = '';
