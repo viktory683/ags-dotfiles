@@ -7,6 +7,7 @@ const config = {
     battery: {
         icons: '',
         charging: '',
+        alert: 10,
     },
 
     temperature: {
@@ -19,10 +20,12 @@ const config = {
 
     memory: {
         icon: '',
+        alert: 80,
     },
 
     cpu: {
         icon: '',
+        alert: 90,
     },
 
     brightness: {
@@ -84,6 +87,12 @@ const config = {
             scss: `${App.configDir}/scss/style.scss`,
             css: `${App.configDir}/style.css`,
         },
+    },
+
+    clock: {
+        // see https://date-fns.org/v3.3.1/docs/format
+        time: ' hh:mm:ss a',
+        date: ' eee, dd MMM yyyy',
     },
 };
 

@@ -5,7 +5,7 @@ export function reloadCSS() {
     // const scss = `${App.configDir}/scss/style.scss`;
     // const css = `${App.configDir}/style.css`;
 
-    console.log(exec(`sassc ${config.CSS.paths.scss} ${config.CSS.paths.css}`));
+    exec(`sassc ${config.CSS.paths.scss} ${config.CSS.paths.css}`);
 
     return config.CSS.paths.css;
 }
@@ -79,4 +79,44 @@ export function removeItem<T>(arr: T[], value: T): T[] {
         arr.splice(index, 1);
     }
     return arr;
+}
+
+/**
+ * `mpstat` wrapper
+ * @param out Output of mpstat in JSON
+ */
+export function wrap_mpstat(out: string) {
+    return {
+        avg: JSON.parse(out).filter(
+            (core: { time: string | undefined; cpu: string }) =>
+                core.time && core.cpu == 'all',
+        )[0],
+        cores: JSON.parse(out)
+            .filter(
+                (core: { time: string; cpu: string }) =>
+                    core.time && core.cpu != 'all',
+            )
+            .sort(
+                (coreA: { cpu: string }, coreB: { cpu: string }) =>
+                    parseInt(coreA.cpu) > parseInt(coreB.cpu),
+            ),
+    };
+}
+
+/**
+ * Update the array of class names based on a specified condition.
+ *
+ * @param {string[]} classNames - The current array of class names.
+ * @param {string} targetClass - The class name to be added or removed.
+ * @param {boolean} condition - The condition to determine whether to add or remove the class.
+ * @returns {string[]} - The updated array of class names.
+ */
+export function updateClassNames(
+    classNames: string[],
+    targetClass: string,
+    condition: boolean,
+): string[] {
+    return condition
+        ? [...classNames, targetClass]
+        : removeItem(classNames, targetClass);
 }

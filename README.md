@@ -4,12 +4,12 @@ version: `0.1.2`
 
 ### TODO
 
-- [/] Стили
-- [/] Модули
+- [ ] Стили
+- [ ] Модули
     - [x] Workspaces
     - [x] Scratchpad
     - [x] Mode
-    - [/] Mpris
+    - [ ] Mpris
         - [ ] обрезать длину текста
         - [ ] Окно по тексту
         - [ ] Багулю отловить, что статус плеера неизвестен
@@ -26,7 +26,7 @@ version: `0.1.2`
     - [x] backlight
     - [x] pulse
     - [x] network
-    - [-] battery
+    - [ ] battery
 - [ ] Hover bug
 
     Странно фиксируются события hover и hoverlost

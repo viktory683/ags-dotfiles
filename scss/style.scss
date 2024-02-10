@@ -69,7 +69,7 @@ window.bar {
     color: $foreground;
     background-color: $surface;
     border-radius: 0 0 6pt 6pt;
-    // border: lighten($surface, 5) solid 1pt;
+    border: lighten($surface, 16) solid 1pt;
 }
 
 window.bar > * {

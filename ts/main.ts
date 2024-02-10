@@ -24,34 +24,45 @@ import {
 import {
     getIconByPercentage as getIconFromArray,
     reloadCSS,
-    removeItem,
     term,
+    updateClassNames,
+    wrap_mpstat,
 } from './helpers';
 import brightness from './service/brightness.js';
 import { Workspace, process_workspace_event } from './sway';
+// @ts-ignore
+import { format } from 'date-fns';
 
+// Reload CSS on scss file changes
 reloadCSS();
-subprocess(
-    [
-        'inotifywait',
-        '--recursive',
-        '--event',
-        'create,modify',
-        '-m',
-        config.CSS.paths.scss.split('/').slice(0, -1).join('/'),
-    ],
-    () => {
-        let f = reloadCSS();
-        App.resetCss();
-        App.applyCss(f);
-        console.log('CSS UPDATED');
-    },
-);
 
-// = WORKSPACES =
+// Function to handle CSS updates
+const handleCssUpdate = () => {
+    let cssFilePath = config.CSS.paths.scss.split('/').slice(0, -1).join('/');
+    subprocess(
+        [
+            'inotifywait',
+            '--recursive',
+            '--event',
+            'create,modify',
+            '-m',
+            cssFilePath,
+        ],
+        () => {
+            let cssFile = reloadCSS();
+            App.resetCss();
+            App.applyCss(cssFile);
+            console.log('CSS UPDATED');
+        },
+    );
+};
 
+// Set up CSS reload on file changes
+handleCssUpdate();
+
+// WORKSPACES
 const swayWorkspaces: Variable_t<Workspace[]> = Variable(
-    JSON.parse(await execAsync('i3-msg -t get_workspaces -r'.split(' '))),
+    JSON.parse(await execAsync('i3-msg -t get_workspaces -r')),
     {
         listen: [
             `i3-msg -t subscribe '["workspace"]' -m -r`,
@@ -62,74 +73,60 @@ const swayWorkspaces: Variable_t<Workspace[]> = Variable(
 
 const Workspaces = Widget.Box({
     class_names: ['workspaces'],
-}).bind('children', swayWorkspaces, 'value', (v) =>
-    v.map((w) =>
+}).bind('children', swayWorkspaces, 'value', (workspaces) =>
+    workspaces.map((workspace) =>
         Widget.Button({
-            on_clicked: () => execAsync(`swaymsg workspace ${w.name}`),
+            on_clicked: () => execAsync(`swaymsg workspace ${workspace.name}`),
             child: Widget.Label({
                 label:
-                    config.workspaces.icons[w.name] ||
+                    config.workspaces.icons[workspace.name] ||
                     config.workspaces.icons['default'],
             }),
             class_names: [
                 'workspace',
                 'widget',
-                `${w.focused ? 'focused' : ''}`,
-                `${w.visible ? 'visible' : ''}`,
-                `${w.urgent ? 'urgent' : ''}`,
+                `${workspace.focused ? 'focused' : ''}`,
+                `${workspace.visible ? 'visible' : ''}`,
+                `${workspace.urgent ? 'urgent' : ''}`,
             ],
         }),
     ),
 );
 
-////////
+// ...
 
-// = SCRATCHPAD =
-
-// TODO this is some shitty code
-function get_scratch_windows(): number {
+// SCRATCHPAD
+function getScratchWindowsCount(): number {
     let tree: TreeNode = JSON.parse(exec('i3-msg -t get_tree -r'));
 
-    let nodes = tree.nodes;
-    if (nodes) {
-        nodes = nodes.filter((n) => n.name == '__i3')[0].nodes;
-        if (nodes) {
-            let floating_nodes = nodes.filter(
-                (n) => n.name == '__i3_scratch',
-            )[0].floating_nodes;
-            if (floating_nodes) return floating_nodes.length;
-        }
-    }
-    return 0;
+    let nodes = tree.nodes?.filter((n) => n.name == '__i3')[0]?.nodes;
+    let floatingNodes = nodes?.filter((n) => n.name == '__i3_scratch')[0]
+        ?.floating_nodes;
+
+    return floatingNodes ? floatingNodes.length : 0;
 }
-const sway_scratchpad = Variable(get_scratch_windows(), {
-    listen: [
-        `i3-msg -t subscribe '["workspace","window"]' -m -r`,
-        (_) => get_scratch_windows(),
-    ],
+
+const swayScratchpad = Variable(getScratchWindowsCount(), {
+    listen: [`i3-msg -t subscribe '["window"]' -m -r`, getScratchWindowsCount],
 });
 
-const show_scratchpad = Variable(false);
-const show_scratchpad_fixed = Variable(false);
+const showScratchpad = Variable(false);
+const showScratchpadFixed = Variable(false);
 
-function revealScratchpad() {
+function shouldRevealScratchpad(): boolean {
     return (
-        show_scratchpad.value ||
-        show_scratchpad_fixed.value ||
-        sway_scratchpad.value > 0
+        showScratchpad.value ||
+        showScratchpadFixed.value ||
+        swayScratchpad.value > 0
     );
 }
 
 function updateScratchpadClasses(obj: Connectable<AgsButton> & AgsButton) {
-    if (
-        show_scratchpad.value ||
-        show_scratchpad_fixed.value ||
-        sway_scratchpad.value > 0
-    ) {
-        obj.class_names = [...obj.class_names, 'fixed-hover'];
-    } else {
-        obj.class_names = removeItem(obj.class_names, 'fixed-hover');
-    }
+    obj.class_names = updateClassNames(
+        obj.class_names,
+        'fixed-hover',
+        shouldRevealScratchpad(),
+    );
 }
 
 const Scratchpad = Widget.Button({
@@ -146,40 +143,46 @@ const Scratchpad = Widget.Button({
                 transition_duration: 500,
                 child: Widget.Label().bind(
                     'label',
-                    sway_scratchpad,
+                    swayScratchpad,
                     'value',
-                    (v) => `${v}`,
+                    (scratchCount) => `${scratchCount}`,
                 ),
             })
-                .bind('reveal_child', show_scratchpad, 'value', () =>
-                    revealScratchpad(),
+                .bind(
+                    'reveal_child',
+                    showScratchpad,
+                    'value',
+                    shouldRevealScratchpad,
                 )
-                .bind('reveal_child', show_scratchpad_fixed, 'value', () =>
-                    revealScratchpad(),
+                .bind(
+                    'reveal_child',
+                    showScratchpadFixed,
+                    'value',
+                    shouldRevealScratchpad,
                 )
-                .bind('reveal_child', sway_scratchpad, 'value', () =>
-                    revealScratchpad(),
+                .bind(
+                    'reveal_child',
+                    swayScratchpad,
+                    'value',
+                    shouldRevealScratchpad,
                 ),
         ],
     }),
 })
-    .hook(sway_scratchpad, (btn) => updateScratchpadClasses(btn))
-    .hook(show_scratchpad, (btn) => updateScratchpadClasses(btn))
-    .hook(show_scratchpad_fixed, (btn) => updateScratchpadClasses(btn));
+    .hook(swayScratchpad, updateScratchpadClasses)
+    .hook(showScratchpad, updateScratchpadClasses)
+    .hook(showScratchpadFixed, updateScratchpadClasses);
 
-////////
+// ...
 
-// = MODE =
+// MODE
 
 const swayMode: Variable_t<mode_t> = Variable(
     JSON.parse(await execAsync('i3-msg -t get_binding_state -r')),
     {
         listen: [
             `i3-msg -t subscribe "['mode']" -m -r`,
-            (out) => {
-                let mode_event: mode_event_t = JSON.parse(out);
-                return { name: mode_event.change };
-            },
+            (out) => ({ name: JSON.parse(out).change }),
         ],
     },
 );
@@ -189,28 +192,31 @@ const Mode = Widget.Revealer({
     transition: 'slide_right',
     child: Widget.Button({
         on_clicked: () => execAsync('swaymsg mode default'),
-        // cursor: 'pointer',
         child: Widget.Label().hook(swayMode, (self) => {
-            let mode = swayMode.value.name;
-            if (mode != 'default') self.label = mode;
+            const mode = swayMode.value.name;
+            if (mode !== 'default') self.label = mode;
         }),
         class_names: ['widget', 'mode'],
     }).hook(swayMode, (self) => {
-        let old_modes = self.class_names.filter((m) => m.startsWith('mode_'));
-        if (old_modes.length > 1) {
-            console.error(`Modes more than one!!! (${old_modes.join(', ')})`);
+        const oldMode = self.class_names.find((m) => m.startsWith('mode_'));
+        self.class_names = updateClassNames(
+            self.class_names,
+            `mode_${swayMode.value.name}`,
+            true,
+        );
+        if (oldMode) {
+            self.class_names = updateClassNames(
+                self.class_names,
+                oldMode,
+                false,
+            );
         }
-        let old_mode = old_modes[0];
-        if (old_mode) {
-            self.class_names = removeItem(self.class_names, `${old_mode}`);
-        }
-        self.class_names = [...self.class_names, `mode_${swayMode.value.name}`];
     }),
-}).bind('revealChild', swayMode, 'value', (v) => v.name != 'default');
+}).bind('revealChild', swayMode, 'value', (v) => v.name !== 'default');
 
-////////
+// ...
 
-// = MEDIA =
+// MEDIA
 
 // TODO debug
 const Media = Widget.Button({
@@ -218,15 +224,12 @@ const Media = Widget.Button({
     on_primary_click: () => Mpris.getPlayer('')?.playPause(),
     on_scroll_up: () => Mpris.getPlayer('')?.next(),
     on_scroll_down: () => Mpris.getPlayer('')?.previous(),
-    child: Widget.Label({}).bind('label', Mpris, 'players', (v) => {
+    child: Widget.Label({}).bind('label', Mpris, 'players', (players) => {
         // TODO iterate over `v` filtering by currently playing
-        // console.log(v);
-        let player = Mpris.getPlayer('');
+        const player = Mpris.getPlayer('');
         if (player) {
-            // console.log(player);
-            let status = player.play_back_status;
-
-            let statusIcon = status ? config.player[status] : '';
+            const status = player.play_back_status;
+            const statusIcon = status ? config.player[status] : '';
 
             return `${statusIcon} ${(player.track_artists || []).join(
                 ', ',
@@ -236,21 +239,27 @@ const Media = Widget.Button({
     }),
 });
 
-////////
+// ...
 
-// = CLOCK =
+// CLOCK
+
+const time = Variable('', {
+    poll: [1000, () => format(new Date(), config.clock.time)],
+});
 
 const date = Variable('', {
-    poll: [1000, () => ` ${new Date().toLocaleTimeString().padStart(11)}`],
+    poll: [1000, () => format(new Date(), config.clock.date)],
 });
 
 const Clock = Widget.Label({
     class_names: ['clock', 'widget'],
-}).bind('label', date);
+})
+    .bind('label', time)
+    .bind('tooltip_markup', date, 'value');
 
-////////
+// ...
 
-// = TRAY =
+// TRAY
 
 const SysTray = Widget.Box({
     class_names: 'widget tray hoverable'.split(' '),
@@ -264,20 +273,19 @@ const SysTray = Widget.Box({
     );
 });
 
-////////
+// ...
 
-// = LANGUAGE =
+// LANGUAGE
 
-// TODO this is some shitty code
-function get_active_layout_name(): string {
-    let out: InputDevice[] = JSON.parse(exec('swaymsg -t get_inputs -r'));
-    let layout = out.filter(
-        (i) => i.type == 'keyboard' && i.xkb_layout_names,
-    )[0].xkb_active_layout_name;
-    if (layout) return layout;
-    return '';
+function getActiveLayoutName(): string {
+    const inputs: InputDevice[] = JSON.parse(exec('swaymsg -t get_inputs -r'));
+    const layout = inputs.filter(
+        (i) => i.type === 'keyboard' && i.xkb_layout_names,
+    )[0]?.xkb_active_layout_name;
+    return layout || '';
 }
-const input_event: Variable_t<XkbLayoutChange> = Variable(
+
+const inputEvent: Variable_t<XkbLayoutChange> = Variable(
     {},
     {
         listen: [
@@ -286,18 +294,17 @@ const input_event: Variable_t<XkbLayoutChange> = Variable(
         ],
     },
 );
-input_event.connect('changed', ({ value }) => {
-    if (value.change != 'xkb_layout') {
-        return;
-    }
 
-    let current_layout = value.input.xkb_active_layout_name;
-    if (current_layout != lang.value) {
-        lang.value = current_layout;
+inputEvent.connect('changed', ({ value }) => {
+    if (value.change === 'xkb_layout') {
+        const currentLayout = value.input.xkb_active_layout_name;
+        if (currentLayout !== lang.value) {
+            lang.value = currentLayout;
+        }
     }
 });
 
-const lang = Variable(get_active_layout_name());
+const lang = Variable(getActiveLayoutName());
 
 const Language = Widget.Button({
     on_clicked: () =>
@@ -308,57 +315,55 @@ const Language = Widget.Button({
         .bind('tooltip_text', lang),
 });
 
-////////
+// ...
 
-// = TEMPERATURE =
+// TEMPERATURE
 
 const TEMPERATURE = Variable(0, {
     poll: [
         2000,
-        () => {
-            return parseInt(readFile(config.temperature.path).trim()) / 1000;
-        },
+        () => parseInt(readFile(config.temperature.path).trim()) / 1000,
     ],
 });
 
-const show_temperature = Variable(false);
-const show_temperature_fixed = Variable(false);
+const showTemperature = Variable(false);
+const showTemperatureFixed = Variable(false);
 
 function revealTemp() {
-    return show_temperature.value || show_temperature_fixed.value;
+    return showTemperature.value || showTemperatureFixed.value;
 }
 
 function updateTempClasses(obj: Connectable<AgsButton> & AgsButton) {
-    if (show_temperature.value || show_temperature_fixed.value) {
-        obj.class_names = [...obj.class_names, 'fixed-hover'];
-    } else {
-        obj.class_names = removeItem(obj.class_names, 'fixed-hover');
-    }
+    obj.class_names = updateClassNames(
+        obj.class_names,
+        'fixed-hover',
+        showTemperature.value || showTemperatureFixed.value,
+    );
 
-    if (TEMPERATURE.value > config.temperature.max) {
-        obj.class_names = [...obj.class_names, 'urgent'];
-    } else {
-        obj.class_names = removeItem(obj.class_names, 'urgent');
-    }
+    obj.class_names = updateClassNames(
+        obj.class_names,
+        'urgent',
+        TEMPERATURE.value > config.temperature.max,
+    );
 }
 
 const Temperature = Widget.Button({
-    on_hover: () => (show_temperature.value = true),
-    on_hover_lost: () => (show_temperature.value = false),
+    on_hover: () => (showTemperature.value = true),
+    on_hover_lost: () => (showTemperature.value = false),
     on_middle_click: () =>
-        (show_temperature_fixed.value = !show_temperature_fixed.value),
+        (showTemperatureFixed.value = !showTemperatureFixed.value),
     class_names: ['widget'],
     child: Widget.Box({
         class_names: ['temp'],
         children: [
-            Widget.Label().bind('label', TEMPERATURE, 'value', (v) => {
-                return getIconFromArray(
+            Widget.Label().bind('label', TEMPERATURE, 'value', (v) =>
+                getIconFromArray(
                     config.temperature.icons.split(''),
                     v,
                     config.temperature.min,
                     config.temperature.max,
-                );
-            }),
+                ),
+            ),
             Widget.Revealer({
                 transition_duration: 500,
                 transition: 'slide_right',
@@ -370,71 +375,88 @@ const Temperature = Widget.Button({
                     (v) => `${v}º`,
                 ),
             })
-                .bind('reveal_child', show_temperature, 'value', (_) =>
-                    revealTemp(),
-                )
-                .bind('reveal_child', show_temperature_fixed, 'value', (_) =>
-                    revealTemp(),
+                .bind('reveal_child', showTemperature, 'value', revealTemp)
+                .bind(
+                    'reveal_child',
+                    showTemperatureFixed,
+                    'value',
+                    revealTemp,
                 ),
         ],
     }),
 })
-    .hook(show_temperature, (self) => updateTempClasses(self))
-    .hook(show_temperature_fixed, (self) => updateTempClasses(self))
-    .hook(TEMPERATURE, (self) => updateTempClasses(self));
+    .hook(showTemperature, updateTempClasses)
+    .hook(showTemperatureFixed, updateTempClasses)
+    .hook(TEMPERATURE, updateTempClasses);
 
-////////
+// ...
 
-// = MEMORY =
+// MEMORY
 
-const MEMORY = Variable([], {
-    poll: [
-        2000,
-        () => {
-            return JSON.parse(exec('jc free -tvw --si'));
-        },
-    ],
+type mem_t = {
+    type: string;
+    total: number;
+    used: number;
+    free: number;
+    shared?: number;
+    buffers?: number;
+    cache?: number;
+    available?: number;
+};
+
+const MEMORY: Variable_t<mem_t[]> = Variable([], {
+    poll: [2000, () => JSON.parse(exec('jc free -tvw --si'))],
 });
 
-const show_memory = Variable(false);
-const show_memory_fixed = Variable(false);
+const showMemory = Variable(false);
+const showMemoryFixed = Variable(false);
 
 function revealMem() {
-    return show_memory.value || show_memory_fixed.value;
+    return showMemory.value || showMemoryFixed.value;
 }
 
 function updateMemoryClasses(obj: Connectable<AgsButton> & AgsButton) {
-    if (show_memory.value || show_memory_fixed.value) {
-        obj.class_names = [...obj.class_names, 'fixed-hover'];
-    } else {
-        obj.class_names = removeItem(obj.class_names, 'fixed-hover');
-    }
+    obj.class_names = updateClassNames(
+        obj.class_names,
+        'fixed-hover',
+        revealMem(),
+    );
 
-    if (
-        (function () {
-            let Mem = MEMORY.value.filter(
-                (o: { type: string }) => o.type == 'Mem',
-            );
-            let percent = 0;
-            if (Mem) {
-                percent = (Mem[0].used / Mem[0].total) * 100;
-            } else {
-                console.error("Can't find Mem!!!");
-            }
-            return percent;
-        })() > 80 // TODO move urgent memory to config
-    ) {
-        obj.class_names = [...obj.class_names, 'urgent'];
+    const memoryPercentage = getMemoryPercentage(MEMORY.value, 'Mem');
+    obj.class_names = updateClassNames(
+        obj.class_names,
+        'urgent',
+        memoryPercentage > config.memory.alert,
+    );
+}
+
+function getMemoryPercentage(memoryData: mem_t[], type: string) {
+    const mem = memoryData.find((o) => o.type === type);
+    if (mem) {
+        return (mem.used / mem.total) * 100;
     } else {
-        obj.class_names = removeItem(obj.class_names, 'urgent');
+        console.error(`Can't find ${type}!!!`);
+        return 0;
     }
 }
 
-// TODO simplify progress binders
+function createMemoryProgressBar(type: string) {
+    return Widget.ProgressBar({
+        vertical: true,
+        inverted: true,
+        class_names: ['progress', 'vertical'],
+    }).bind(
+        'value',
+        MEMORY,
+        'value',
+        (v) => getMemoryPercentage(v, type) / 100,
+    );
+}
+
 const Memory = Widget.Button({
-    on_hover: () => (show_memory.value = true),
-    on_hover_lost: () => (show_memory.value = false),
-    on_middle_click: () => (show_memory_fixed.value = !show_memory_fixed.value),
+    on_hover: () => (showMemory.value = true),
+    on_hover_lost: () => (showMemory.value = false),
+    on_middle_click: () => (showMemoryFixed.value = !showMemoryFixed.value),
     class_names: ['widget'],
     child: Widget.Box({
         class_names: ['memory'],
@@ -446,110 +468,54 @@ const Memory = Widget.Button({
                 class_names: ['revealer'],
                 child: Widget.Box({
                     children: [
-                        Widget.ProgressBar({
-                            vertical: true,
-                            inverted: true,
-                            class_names: ['progress', 'vertical'],
-                        }).bind('value', MEMORY, 'value', (v) => {
-                            let t = v.filter(
-                                (obj: { type: string }) => obj.type == 'Mem',
-                            )[0];
-                            let val = 0;
-                            if (t) {
-                                val = t.used / t.total;
-                            }
-                            return val;
-                        }),
-                        Widget.ProgressBar({
-                            vertical: true,
-                            inverted: true,
-                            class_names: ['progress', 'vertical'],
-                        }).bind('value', MEMORY, 'value', (v) => {
-                            let t = v.filter(
-                                (obj: { type: string }) => obj.type == 'Swap',
-                            )[0];
-                            let val = 0;
-                            if (t) {
-                                val = t.used / t.total;
-                            }
-                            return val;
-                        }),
+                        createMemoryProgressBar('Mem'),
+                        createMemoryProgressBar('Swap'),
                     ],
                 }),
             })
-                .bind('reveal_child', show_memory, 'value', (_) => revealMem())
-                .bind('reveal_child', show_memory_fixed, 'value', (_) =>
-                    revealMem(),
-                ),
+                .bind('reveal_child', showMemory, 'value', revealMem)
+                .bind('reveal_child', showMemoryFixed, 'value', revealMem),
         ],
     }),
 })
-    .hook(show_memory, (self) => updateMemoryClasses(self))
-    .hook(show_memory_fixed, (self) => updateMemoryClasses(self))
-    .hook(MEMORY, (self) => updateMemoryClasses(self));
+    .hook(showMemory, updateMemoryClasses)
+    .hook(showMemoryFixed, updateMemoryClasses)
+    .hook(MEMORY, updateMemoryClasses);
 
-////////
+// ...
 
-// = CPU =
+// CPU
 
-/**
- * `mpstat` wrapper
- * @param out Output of mpstat in JSON
- */
-const wrap_mpstat = (out: string) => {
-    return {
-        avg: JSON.parse(out).filter(
-            (core: { time: string | undefined; cpu: string }) =>
-                core.time && core.cpu == 'all',
-        )[0],
-        cores: JSON.parse(out)
-            .filter(
-                (core: { time: string; cpu: string }) =>
-                    core.time && core.cpu != 'all',
-            )
-            .sort(
-                (coreA: { cpu: string }, coreB: { cpu: string }) =>
-                    parseInt(coreA.cpu) > parseInt(coreB.cpu),
-            ),
-    };
-};
-
-const _cpu = Variable(wrap_mpstat(exec('jc mpstat -P ALL')), {
+const cpu = Variable(wrap_mpstat(exec('jc mpstat -P ALL')), {
     poll: [2000, 'jc mpstat -P ALL 2 1', (out) => wrap_mpstat(out)],
 });
 
-const show_cpu_cores = Variable(false);
-const show_cpu_cores_fixed = Variable(false);
+const showCpuCores = Variable(false);
+const showCpuCoresFixed = Variable(false);
 
 function revealCPU() {
-    return show_cpu_cores.value || show_cpu_cores_fixed.value;
+    return showCpuCores.value || showCpuCoresFixed.value;
 }
 
-// console.log(_cpu.value.cores[0]);
-
-// TODO
 function updateCPUClasses(obj: Connectable<AgsButton> & AgsButton) {
-    if (show_cpu_cores.value || show_cpu_cores_fixed.value) {
-        obj.class_names = [...obj.class_names, 'fixed-hover'];
-    } else {
-        obj.class_names = removeItem(obj.class_names, 'fixed-hover');
-    }
+    obj.class_names = updateClassNames(
+        obj.class_names,
+        'fixed-hover',
+        revealCPU(),
+    );
 
-    if (
-        100 - _cpu.value.avg.percent_idle >
-        90 // TODO move max_cpu_usage to config
-    ) {
-        obj.class_names = [...obj.class_names, 'urgent'];
-    } else {
-        obj.class_names = removeItem(obj.class_names, 'urgent');
-    }
+    const avgIdlePercentage = 100 - cpu.value.avg.percent_idle;
+    obj.class_names = updateClassNames(
+        obj.class_names,
+        'urgent',
+        avgIdlePercentage > config.cpu.alert,
+    );
 }
 
 const CPU = Widget.Button({
-    on_hover: () => (show_cpu_cores.value = true),
-    on_hover_lost: () => (show_cpu_cores.value = false),
-    on_middle_click: () =>
-        (show_cpu_cores_fixed.value = !show_cpu_cores_fixed.value),
+    on_hover: () => (showCpuCores.value = true),
+    on_hover_lost: () => (showCpuCores.value = false),
+    on_middle_click: () => (showCpuCoresFixed.value = !showCpuCoresFixed.value),
     on_clicked: () => term('btop'),
     class_names: ['widget'],
     child: Widget.Box({
@@ -561,61 +527,57 @@ const CPU = Widget.Button({
                 transition: 'slide_right',
                 transition_duration: 500,
                 child: Widget.Box({
-                    children: _cpu.value.cores.map((core: { cpu: string }) =>
+                    children: cpu.value.cores.map((core) =>
                         Widget.ProgressBar({
                             vertical: true,
                             inverted: true,
                             class_names: ['progress', 'vertical'],
                         }).bind(
                             'value',
-                            _cpu,
+                            cpu,
                             'value',
-                            (cpu_stat) =>
+                            (cpuStat) =>
                                 (100 -
-                                    cpu_stat.cores[parseInt(core.cpu)]
+                                    cpuStat.cores[parseInt(core.cpu)]
                                         .percent_idle) /
                                 100,
                         ),
                     ),
                 }),
             })
-                .bind('reveal_child', show_cpu_cores, 'value', (_) =>
-                    revealCPU(),
-                )
-                .bind('reveal_child', show_cpu_cores_fixed, 'value', (_) =>
-                    revealCPU(),
-                ),
+                .bind('reveal_child', showCpuCores, 'value', revealCPU)
+                .bind('reveal_child', showCpuCoresFixed, 'value', revealCPU),
         ],
     }),
 })
-    .hook(show_cpu_cores, (self) => updateCPUClasses(self))
-    .hook(show_cpu_cores_fixed, (self) => updateCPUClasses(self))
-    .hook(_cpu, (self) => updateCPUClasses(self));
+    .hook(showCpuCores, updateCPUClasses)
+    .hook(showCpuCoresFixed, updateCPUClasses)
+    .hook(cpu, updateCPUClasses);
 
-////////
+// ...
 
-// = BRIGHTNESS =
+// BRIGHTNESS
 
-const show_brightness = Variable(false);
-const show_brightness_fixed = Variable(false);
+const showBrightness = Variable(false);
+const showBrightnessFixed = Variable(false);
 
 function revealBrightness() {
-    return show_brightness.value || show_brightness_fixed.value;
+    return showBrightness.value || showBrightnessFixed.value;
 }
 
 function updateBrightnessClasses(obj: Connectable<AgsButton> & AgsButton) {
-    if (show_brightness.value || show_brightness_fixed.value) {
-        obj.class_names = [...obj.class_names, 'fixed-hover'];
-    } else {
-        obj.class_names = removeItem(obj.class_names, 'fixed-hover');
-    }
+    obj.class_names = updateClassNames(
+        obj.class_names,
+        'fixed-hover',
+        revealBrightness(),
+    );
 }
 
 const Brightness = Widget.Button({
-    on_hover: () => (show_brightness.value = true),
-    on_hover_lost: () => (show_brightness.value = false),
+    on_hover: () => (showBrightness.value = true),
+    on_hover_lost: () => (showBrightness.value = false),
     on_middle_click: () =>
-        (show_brightness_fixed.value = !show_brightness_fixed.value),
+        (showBrightnessFixed.value = !showBrightnessFixed.value),
     on_scroll_up: () => execAsync('brightnessctl -e s 1-%'),
     on_scroll_down: () => execAsync('brightnessctl -e s 1+%'),
     child: Widget.Box({
@@ -632,22 +594,23 @@ const Brightness = Widget.Button({
                     class_names: ['progress', 'vertical'],
                 }).bind('value', brightness, 'screen_value'),
             })
-                .bind('reveal_child', show_brightness, 'value', (_) =>
-                    revealBrightness(),
-                )
-                .bind('reveal_child', show_brightness_fixed, 'value', (_) =>
-                    revealBrightness(),
+                .bind('reveal_child', showBrightness, 'value', revealBrightness)
+                .bind(
+                    'reveal_child',
+                    showBrightnessFixed,
+                    'value',
+                    revealBrightness,
                 ),
         ],
     }),
 })
     .bind('visible', brightness, 'screen_value', (v) => v < 1)
-    .hook(show_brightness, (self) => updateBrightnessClasses(self))
-    .hook(show_brightness_fixed, (self) => updateBrightnessClasses(self));
+    .hook(showBrightness, updateBrightnessClasses)
+    .hook(showBrightnessFixed, updateBrightnessClasses);
 
-////////
+// ...
 
-// = VOLUME =
+// VOLUME
 
 const VOLUME = Variable(
     {
@@ -672,42 +635,43 @@ const VOLUME = Variable(
     },
 );
 
+const showPulseaudioFixed = Variable(false);
+const showPulseaudio = Variable(false);
+
 function revealVol() {
-    let hovered = show_pulseaudio.value;
-    let show = show_pulseaudio_fixed.value;
-    let vol = VOLUME.value['sink']['volume'];
+    const hovered = showPulseaudio.value;
+    const show = showPulseaudioFixed.value;
+    const vol = VOLUME.value['sink']['volume'];
     return (hovered || show) && vol > 0;
 }
 
-const show_pulseaudio_fixed = Variable(false);
-const show_pulseaudio = Variable(false);
-
 function updateVolumeClasses(obj: Connectable<AgsButton> & AgsButton) {
-    if (show_pulseaudio.value || show_pulseaudio_fixed.value) {
-        obj.class_names = [...obj.class_names, 'fixed-hover'];
-    } else {
-        obj.class_names = removeItem(obj.class_names, 'fixed-hover');
-    }
+    obj.class_names = updateClassNames(
+        obj.class_names,
+        'fixed-hover',
+        revealVol(),
+    );
 
-    if (Math.round(VOLUME.value.sink.volume) > 100) {
-        obj.class_names = [...obj.class_names, 'urgent'];
-    } else {
-        obj.class_names = removeItem(obj.class_names, 'urgent');
-    }
+    const roundedVolume = Math.round(VOLUME.value.sink.volume);
+    obj.class_names = updateClassNames(
+        obj.class_names,
+        'urgent',
+        roundedVolume > 100,
+    );
 
-    if (VOLUME.value.sink.mute) {
-        obj.class_names = [...obj.class_names, 'disabled'];
-    } else {
-        obj.class_names = removeItem(obj.class_names, 'disabled');
-    }
+    obj.class_names = updateClassNames(
+        obj.class_names,
+        'disabled',
+        VOLUME.value.sink.mute,
+    );
 }
 
 const Volume = Widget.Button({
     on_clicked: () => execAsync('pactl set-sink-mute @DEFAULT_SINK@ toggle'),
     on_middle_click: () =>
-        (show_pulseaudio_fixed.value = !show_pulseaudio_fixed.value),
-    on_hover: () => (show_pulseaudio.value = true),
-    on_hover_lost: () => (show_pulseaudio.value = false),
+        (showPulseaudioFixed.value = !showPulseaudioFixed.value),
+    on_hover: () => (showPulseaudio.value = true),
+    on_hover_lost: () => (showPulseaudio.value = false),
     class_names: ['widget'],
     child: Widget.Box({
         spacing: 2,
@@ -724,8 +688,8 @@ const Volume = Widget.Button({
                     return config.volume.muted;
                 }
 
-                let vol = Math.round(v['sink']['volume']);
-                if (vol == 0) {
+                const vol = Math.round(v['sink']['volume']);
+                if (vol === 0) {
                     return config.volume.silent;
                 }
                 if (vol > 100) {
@@ -744,13 +708,9 @@ const Volume = Widget.Button({
                     (v) => `${Math.round(v['sink']['volume'])}%`,
                 ),
             })
-                .bind('revealChild', VOLUME, 'value', (v) => revealVol())
-                .bind('revealChild', show_pulseaudio, 'value', (v) =>
-                    revealVol(),
-                )
-                .bind('revealChild', show_pulseaudio_fixed, 'value', (v) =>
-                    revealVol(),
-                ),
+                .bind('revealChild', VOLUME, 'value', revealVol)
+                .bind('revealChild', showPulseaudio, 'value', revealVol)
+                .bind('revealChild', showPulseaudioFixed, 'value', revealVol),
             Widget.Box({
                 children: [
                     Widget.Label({ label: config.volume.bluetooth }).bind(
@@ -765,13 +725,13 @@ const Volume = Widget.Button({
         ],
     }),
 })
-    .hook(show_pulseaudio, (self) => updateVolumeClasses(self))
-    .hook(show_pulseaudio_fixed, (self) => updateVolumeClasses(self))
-    .hook(VOLUME, (self) => updateVolumeClasses(self));
+    .hook(showPulseaudio, updateVolumeClasses)
+    .hook(showPulseaudioFixed, updateVolumeClasses)
+    .hook(VOLUME, updateVolumeClasses);
 
-////////
+// ...
 
-// = NETWORK =
+// NETWORK
 
 const NETWORK: Variable_t<null | number> = Variable(null, {
     poll: [
@@ -779,46 +739,45 @@ const NETWORK: Variable_t<null | number> = Variable(null, {
         `jc iw dev ${config.network.interface} link`,
         (out) => {
             let data = JSON.parse(out);
-            if (data.length == 0) return null;
+            if (data.length === 0) return null;
 
             return Math.round(2 * (data[0].signal_dbm + 100));
         },
     ],
 });
 
-const show_network = Variable(false);
-const show_network_fixed = Variable(false);
+const showNetwork = Variable(false);
+const showNetworkFixed = Variable(false);
 
 function revealNet() {
-    return show_network.value || show_network_fixed.value;
+    return showNetwork.value || showNetworkFixed.value;
 }
 
 function updateNetworkClasses(obj: Connectable<AgsButton> & AgsButton) {
-    if (show_network.value || show_network_fixed.value) {
-        obj.class_names = [...obj.class_names, 'fixed-hover'];
-    } else {
-        obj.class_names = removeItem(obj.class_names, 'fixed-hover');
-    }
+    obj.class_names = updateClassNames(
+        obj.class_names,
+        'fixed-hover',
+        revealNet(),
+    );
 
-    if (NETWORK.value == null) {
-        obj.class_names = [...obj.class_names, 'disabled'];
-    } else {
-        obj.class_names = removeItem(obj.class_names, 'disabled');
-    }
+    obj.class_names = updateClassNames(
+        obj.class_names,
+        'disabled',
+        NETWORK.value === null,
+    );
 }
 
 const Network = Widget.Button({
     on_secondary_click: () => term('bluetuith'),
-    on_middle_click: () =>
-        (show_network_fixed.value = !show_network_fixed.value),
-    on_hover: () => (show_network.value = true),
-    on_hover_lost: () => (show_network.value = false),
+    on_middle_click: () => (showNetworkFixed.value = !showNetworkFixed.value),
+    on_hover: () => (showNetwork.value = true),
+    on_hover_lost: () => (showNetwork.value = false),
     class_names: ['widget'],
     child: Widget.Box({
         class_names: ['network'],
         children: [
             Widget.Label().bind('label', NETWORK, 'value', (v) =>
-                v == null
+                v === null
                     ? config.network.disabled
                     : getIconFromArray(config.network.icons.split(''), v),
             ),
@@ -826,57 +785,46 @@ const Network = Widget.Button({
                 transition: 'slide_right',
                 transition_duration: 500,
                 class_names: ['revealer'],
-                child: Widget.Label().bind(
-                    'label',
-                    NETWORK,
-                    'value',
-                    (v) => `${v}%`,
+                child: Widget.Label().bind('label', NETWORK, 'value', (v) =>
+                    v !== null ? `${v}%` : '',
                 ),
             })
-                .bind('reveal_child', show_network, 'value', (_) => revealNet())
-                .bind('reveal_child', show_network_fixed, 'value', (_) =>
-                    revealNet(),
-                )
-                .bind('visible', NETWORK, 'value', (v) => v != null),
+                .bind('reveal_child', showNetwork, 'value', revealNet)
+                .bind('reveal_child', showNetworkFixed, 'value', revealNet)
+                .bind('visible', NETWORK, 'value', (v) => v !== null),
         ],
     }),
 })
-    .hook(show_network, (self) => updateNetworkClasses(self))
-    .hook(show_network_fixed, (self) => updateNetworkClasses(self));
+    .hook(showNetwork, updateNetworkClasses)
+    .hook(showNetworkFixed, updateNetworkClasses);
 
-////////
+// ...
 
-// = BATTERY
+// BATTERY
 
-const show_battery = Variable(false);
-const show_battery_fixed = Variable(false);
+const showBattery = Variable(false);
+const showBatteryFixed = Variable(false);
 
 function revealBat() {
-    return show_battery.value || show_battery_fixed.value;
+    return showBattery.value || showBatteryFixed.value;
 }
 
 function updateBatteryClasses(obj: Connectable<AgsButton> & AgsButton) {
-    if (show_battery.value || show_battery_fixed.value) {
-        obj.class_names = [...obj.class_names, 'fixed-hover'];
-    } else {
-        obj.class_names = removeItem(obj.class_names, 'fixed-hover');
-    }
+    obj.class_names = updateClassNames(
+        obj.class_names,
+        'fixed-hover',
+        revealBat(),
+    );
 
-    if (
-        battery.percent <= 10 && // TODO move urgent battery percent to config
-        !battery.charging
-    ) {
-        obj.class_names = [...obj.class_names, 'urgent'];
-    } else {
-        obj.class_names = removeItem(obj.class_names, 'urgent');
-    }
+    const isLowBattery =
+        battery.percent <= config.battery.alert && !battery.charging;
+    obj.class_names = updateClassNames(obj.class_names, 'urgent', isLowBattery);
 }
 
 const Battery = Widget.Button({
-    on_hover: () => (show_battery.value = true),
-    on_hover_lost: () => (show_battery.value = false),
-    on_middle_click: () =>
-        (show_battery_fixed.value = !show_battery_fixed.value),
+    on_hover: () => (showBattery.value = true),
+    on_hover_lost: () => (showBattery.value = false),
+    on_middle_click: () => (showBatteryFixed.value = !showBatteryFixed.value),
     class_names: ['widget'],
     child: Widget.Box({
         class_names: ['battery'],
@@ -903,20 +851,17 @@ const Battery = Widget.Button({
                     (v) => `${Math.round(v)}%`,
                 ),
             })
-                .bind('reveal_child', show_battery, 'value', (_) => revealBat())
-                .bind('reveal_child', show_battery_fixed, 'value', (_) =>
-                    revealBat(),
-                ),
+                .bind('reveal_child', showBattery, 'value', revealBat)
+                .bind('reveal_child', showBatteryFixed, 'value', revealBat),
         ],
     }),
 })
-    .hook(show_battery, (self) => updateBatteryClasses(self))
-    .hook(show_battery_fixed, (self) => updateBatteryClasses(self))
-    .hook(battery, (self) => updateBatteryClasses(self));
+    .hook(showBattery, updateBatteryClasses)
+    .hook(showBatteryFixed, updateBatteryClasses)
+    .hook(battery, updateBatteryClasses);
 
-////////
+// ...
 
-// TODO
 const Left = Widget.Box({
     class_names: ['modules-left'],
     children: [Workspaces, Scratchpad, Mode, Media],
@@ -927,7 +872,6 @@ const Center = Widget.Box({
     children: [Clock],
 });
 
-// TODO
 const Right = Widget.Box({
     class_names: ['modules-right'],
     hpack: 'end',
