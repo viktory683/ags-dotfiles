@@ -99,7 +99,3 @@ export type InputDevice = {
 export type mode_t = {
     name: string;
 };
-export type mode_event_t = {
-    change: string;
-    pango_markup: boolean;
-};

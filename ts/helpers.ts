@@ -1,18 +1,21 @@
 import { exec, execAsync } from 'resource:///com/github/Aylur/ags/utils.js';
 import config from './config';
 
-export function reloadCSS() {
-    // const scss = `${App.configDir}/scss/style.scss`;
-    // const css = `${App.configDir}/style.css`;
+/**
+ * Reloads the CSS by compiling SCSS to CSS.
+ * @returns {string} - The path to the compiled CSS file.
+ */
+export function reloadCSS(): string {
+    const scssPath = config.CSS.paths.scss;
+    const cssPath = config.CSS.paths.css;
 
-    exec(`sassc ${config.CSS.paths.scss} ${config.CSS.paths.css}`);
+    exec(`sassc ${scssPath} ${cssPath}`);
 
-    return config.CSS.paths.css;
+    return cssPath;
 }
 
 /**
  * Maps a value from one range to another.
- *
  * @param {number} x - The input value to be mapped.
  * @param {number} in_min - The minimum value of the input range.
  * @param {number} in_max - The maximum value of the input range.
@@ -20,7 +23,7 @@ export function reloadCSS() {
  * @param {number} out_max - The maximum value of the output range.
  * @returns {number} - The mapped value in the output range.
  */
-function map(
+export function map(
     x: number,
     in_min: number,
     in_max: number,
@@ -32,7 +35,6 @@ function map(
 
 /**
  * Gets an icon from an array based on a percentage value within a specified range.
- *
  * @template T - The type of elements in the array.
  * @param {T[]} icons - The array of icons.
  * @param {number} value - The percentage value.
@@ -46,35 +48,29 @@ export function getIconByPercentage<T>(
     min: number = 0,
     max: number = 100,
 ): T {
-    // Map the percentage value to an index within the icons array
-    let index = map(value, min, max, 0, icons.length);
-
-    // Round the index to the nearest integer
-    index = Math.floor(index);
-
-    // Ensure the index is within the valid range of array indices
+    let index = Math.floor(map(value, min, max, 0, icons.length));
     index = Math.max(0, Math.min(icons.length - 1, index));
-
-    // Return the selected icon
     return icons[index];
 }
 
 /**
- * Launch something in terminal
- * @param command Command and args to execute
+ * Launches a command in the terminal.
+ * @param {string} command - Command and args to execute.
+ * @returns {Promise<string>} - A promise resolving to the command output.
  */
 export async function term(command: string): Promise<string> {
     return execAsync(`${config.term_launch} ${command}`);
 }
 
 /**
- * Remove item from array
- * @param arr Array of element where from to remove an item
- * @param value Item to remove
- * @returns Array without item
+ * Removes an item from an array.
+ * @template T - The type of elements in the array.
+ * @param {T[]} arr - Array from which to remove an item.
+ * @param {T} value - Item to remove.
+ * @returns {T[]} - Array without the specified item.
  */
-export function removeItem<T>(arr: T[], value: T): T[] {
-    var index = arr.indexOf(value);
+function removeItem<T>(arr: T[], value: T): T[] {
+    const index = arr.indexOf(value);
     if (index > -1) {
         arr.splice(index, 1);
     }
@@ -82,30 +78,32 @@ export function removeItem<T>(arr: T[], value: T): T[] {
 }
 
 /**
- * `mpstat` wrapper
- * @param out Output of mpstat in JSON
+ * `mpstat` wrapper.
+ * @param {string} out - Output of `mpstat` in JSON.
+ * @returns {object} - Wrapped `mpstat` data.
  */
-export function wrap_mpstat(out: string) {
+export function wrapMpstat(out: string): { avg: any; cores: any[] } {
+    const parsedData = JSON.parse(out);
+
     return {
-        avg: JSON.parse(out).filter(
+        avg: parsedData.find(
             (core: { time: string | undefined; cpu: string }) =>
-                core.time && core.cpu == 'all',
-        )[0],
-        cores: JSON.parse(out)
+                core.time && core.cpu === 'all',
+        ),
+        cores: parsedData
             .filter(
                 (core: { time: string; cpu: string }) =>
-                    core.time && core.cpu != 'all',
+                    core.time && core.cpu !== 'all',
             )
             .sort(
                 (coreA: { cpu: string }, coreB: { cpu: string }) =>
-                    parseInt(coreA.cpu) > parseInt(coreB.cpu),
+                    parseInt(coreA.cpu) - parseInt(coreB.cpu),
             ),
     };
 }
 
 /**
  * Update the array of class names based on a specified condition.
- *
  * @param {string[]} classNames - The current array of class names.
  * @param {string} targetClass - The class name to be added or removed.
  * @param {boolean} condition - The condition to determine whether to add or remove the class.

@@ -14,23 +14,17 @@ import Mpris from 'resource:///com/github/Aylur/ags/service/mpris.js';
 import AgsButton from 'types/widgets/button';
 import { Variable as Variable_t } from 'types/variable';
 import config from './config';
-import {
-    InputDevice,
-    TreeNode,
-    XkbLayoutChange,
-    mode_event_t,
-    mode_t,
-} from './types/sway';
+import { InputDevice, TreeNode, XkbLayoutChange, mode_t } from './types/sway';
 import {
     getIconByPercentage as getIconFromArray,
     reloadCSS,
     term,
     updateClassNames,
-    wrap_mpstat,
+    wrapMpstat,
 } from './helpers';
 import brightness from './service/brightness.js';
-import { Workspace, process_workspace_event } from './sway';
-// @ts-ignore
+import { Workspace, processWorkspaceEvent } from './sway';
+
 import { format } from 'date-fns';
 
 // Reload CSS on scss file changes
@@ -66,7 +60,7 @@ const swayWorkspaces: Variable_t<Workspace[]> = Variable(
     {
         listen: [
             `i3-msg -t subscribe '["workspace"]' -m -r`,
-            (out) => process_workspace_event(swayWorkspaces.value, out),
+            (out) => processWorkspaceEvent(swayWorkspaces.value, out),
         ],
     },
 );
@@ -229,7 +223,7 @@ const Media = Widget.Button({
         const player = Mpris.getPlayer('');
         if (player) {
             const status = player.play_back_status;
-            const statusIcon = status ? config.player[status] : '';
+            const statusIcon = status ? config.player.states[status] : '';
 
             return `${statusIcon} ${(player.track_artists || []).join(
                 ', ',
@@ -486,8 +480,8 @@ const Memory = Widget.Button({
 
 // CPU
 
-const cpu = Variable(wrap_mpstat(exec('jc mpstat -P ALL')), {
-    poll: [2000, 'jc mpstat -P ALL 2 1', (out) => wrap_mpstat(out)],
+const cpu = Variable(wrapMpstat(exec('jc mpstat -P ALL')), {
+    poll: [2000, 'jc mpstat -P ALL 2 1', (out) => wrapMpstat(out)],
 });
 
 const showCpuCores = Variable(false);

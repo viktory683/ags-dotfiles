@@ -14,7 +14,12 @@
             "./types/ags.d.ts",
             "./node_modules/@girs"
         ],
-        "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true
-    }
+        "skipLibCheck": false,
+        "forceConsistentCasingInFileNames": true,
+        "moduleResolution": "node",
+    },
+    "exclude": [
+        "./config.js",
+        "./build"
+    ]
 }

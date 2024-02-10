@@ -41,16 +41,19 @@ $onyx: #404040;
         background: $surface;
         color: $foreground;
     }
+
     to {
         background: $error;
         color: black;
     }
 }
+
 @keyframes urgentout {
     from {
         background: $error;
         color: black;
     }
+
     to {
         background: $surface;
         color: $foreground;
@@ -69,7 +72,7 @@ window.bar {
     color: $foreground;
     background-color: $surface;
     border-radius: 0 0 6pt 6pt;
-    border: lighten($surface, 16) solid 1pt;
+    border-bottom: lighten($surface, 16) solid 1.5pt;
 }
 
 window.bar > * {

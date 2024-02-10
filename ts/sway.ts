@@ -1,18 +1,18 @@
 // see https://i3wm.org/docs/ipc.html
 
-enum change_types {
-    focus = 'focus',
-    init = 'init',
-    empty = 'empty',
-    urgent = 'urgent',
+enum ChangeTypes {
+    Focus = 'focus',
+    Init = 'init',
+    Empty = 'empty',
+    Urgent = 'urgent',
     // TODO
-    // reload = 'reload',
-    // rename = 'rename',
-    // restored = 'restored',
-    // move = 'move',
+    // Reload = 'reload',
+    // Rename = 'rename',
+    // Restored = 'restored',
+    // Move = 'move',
 }
 
-type map = {
+type Map = {
     x: number;
     y: number;
     width: number;
@@ -26,63 +26,53 @@ export type Workspace = {
     visible: boolean;
     focused: boolean;
     urgent: boolean;
-    rect: map;
+    rect: Map;
     output: string;
 };
 
-export function process_workspace_event(
-    current_workspaces: Workspace[],
-    event_data: string,
+export function processWorkspaceEvent(
+    currentWorkspaces: Workspace[],
+    eventData: string,
 ): Workspace[] {
-    let _out: {
-        change: change_types;
-        old: null | Workspace;
-        current: null | Workspace;
-    } = JSON.parse(event_data);
-    let change = _out.change;
-    let old = _out.old;
-    let current = _out.current;
+    const { change, old, current } = JSON.parse(eventData);
 
-    let workspaces = current_workspaces;
+    let workspaces = [...currentWorkspaces];
+
     switch (change) {
-        case change_types.empty:
-            let index = -1;
-            for (let i = 0; i < workspaces.length; i++) {
-                // @ts-ignore
-                if (workspaces[i].id == current.id) {
-                    index = i;
-                    break;
+        case ChangeTypes.Focus:
+            workspaces.forEach((ws) => {
+                if (old && ws.id === old.id) {
+                    ws.focused = false;
                 }
-            }
-            if (index > 0) workspaces.splice(index, 1);
+                if (ws.id === current.id) {
+                    ws.focused = true;
+                }
+            });
             break;
-        case change_types.focus:
-            for (let i = 0; i < workspaces.length; i++) {
-                if (old)
-                    if (workspaces[i].id == old.id)
-                        workspaces[i].focused = false;
-                // @ts-ignore
-                if (workspaces[i].id == current.id)
-                    workspaces[i].focused = true;
-            }
-            break;
-        case change_types.init:
+
+        case ChangeTypes.Init:
             // TODO replace with something like inserting by index
-            // @ts-ignore
             workspaces.push(current);
-            workspaces = workspaces.sort((a, b) => a.num - b.num);
+            workspaces.sort((a, b) => a.num - b.num);
             break;
-        case change_types.urgent:
-            for (let i = 0; i < workspaces.length; i++) {
-                // @ts-ignore
-                if (workspaces[i].id == current.id)
-                    // @ts-ignore
-                    workspaces[i].urgent = current.urgent;
+
+        case ChangeTypes.Empty:
+            const index = workspaces.findIndex((ws) => ws.id === current.id);
+            if (index >= 0) {
+                workspaces.splice(index, 1);
             }
+            break;
+
+        case ChangeTypes.Urgent:
+            workspaces.forEach((ws) => {
+                if (ws.id === current.id) {
+                    ws.urgent = current.urgent;
+                }
+            });
             break;
 
         default:
-            console.error(`unknown chnage variant. Got ${event_data}`);
+            console.error(`Unknown change variant. Got ${eventData}`);
             break;
     }
 

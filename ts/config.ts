@@ -1,99 +1,13 @@
 import App from 'resource:///com/github/Aylur/ags/app.js';
+import { readFile } from 'resource:///com/github/Aylur/ags/utils.js';
+// import * as fs from 'fs';
+import * as toml from 'toml';
+import config_t from './types/config';
 
-const config = {
-    // command to launch something in terminal
-    term_launch: 'alacritty -e',
+const tomlConfig = readFile(`${App.configDir}/ags.toml`);
+let config: config_t = toml.parse(tomlConfig);
 
-    battery: {
-        icons: '',
-        charging: '',
-        alert: 10,
-    },
-
-    temperature: {
-        icons: '',
-        alert: '',
-        min: 45,
-        max: 75,
-        path: '/sys/class/thermal/thermal_zone0/temp',
-    },
-
-    memory: {
-        icon: '',
-        alert: 80,
-    },
-
-    cpu: {
-        icon: '',
-        alert: 90,
-    },
-
-    brightness: {
-        icon: '',
-    },
-
-    network: {
-        icons: '',
-        disabled: '',
-        interface: 'wlan0',
-    },
-
-    volume: {
-        icons: '',
-        bluetooth: '',
-        muted: '',
-        silent: '',
-        alert: '',
-        mic: '',
-    },
-
-    player: {
-        Playing: '',
-        Paused: '',
-        Stopped: '',
-    },
-
-    scratchpad: {
-        icon: '',
-    },
-
-    workspaces: {
-        icons: {
-            '1': '',
-            '2': '',
-            '3': '',
-            '4': '',
-            '5': '',
-            '6': '',
-            '7': '',
-            '8': '',
-            '9': '',
-            '10': '',
-            '11': '',
-            '12': '',
-            default: '',
-        },
-    },
-
-    language: {
-        icons: {
-            'English (US)': '🇺🇸',
-            Russian: '🇷🇺',
-        },
-    },
-
-    CSS: {
-        paths: {
-            scss: `${App.configDir}/scss/style.scss`,
-            css: `${App.configDir}/style.css`,
-        },
-    },
-
-    clock: {
-        // see https://date-fns.org/v3.3.1/docs/format
-        time: ' hh:mm:ss a',
-        date: ' eee, dd MMM yyyy',
-    },
-};
+config.CSS.paths.css = `${App.configDir}${config.CSS?.paths?.css}`;
+config.CSS.paths.scss = `${App.configDir}${config.CSS?.paths?.scss}`;
 
 export default config;

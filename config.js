@@ -1,8 +1,8 @@
 import App from 'resource:///com/github/Aylur/ags/app.js'
 import { execAsync } from 'resource:///com/github/Aylur/ags/utils.js'
 
-const entry = App.configDir + '/ts/main.ts'
-const outdir = '/tmp/ags/js'
+const entry = `${App.configDir}/ts/main.ts`
+const outdir = `${App.configDir}/build`
 
 try {
     await execAsync([
@@ -12,7 +12,6 @@ try {
         '--external', 'gi://*',
     ])
 } catch (error) {
-    // @ts-ignore
     console.error(error)
 }
 
