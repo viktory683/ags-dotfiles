@@ -12,7 +12,7 @@ enum ChangeTypes {
     // Move = 'move',
 }
 
-type Map = {
+type Rect = {
     x: number;
     y: number;
     width: number;
@@ -26,7 +26,7 @@ export type Workspace = {
     visible: boolean;
     focused: boolean;
     urgent: boolean;
-    rect: Map;
+    rect: Rect;
     output: string;
 };
 

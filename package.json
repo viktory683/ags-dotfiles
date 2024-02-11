@@ -1,7 +1,9 @@
 {
-  "dependencies": {
-    "date-fns": "^3.3.1",
-    "toml": "^3.0.0",
-    "typescript-json-validator": "^2.4.2"
-  }
+    "dependencies": {
+        "date-fns": "^3.3.1",
+        "fp-ts": "^2.16.2",
+        "io-ts": "^2.2.21",
+        "io-ts-types": "^0.5.19",
+        "toml": "^3.0.0"
+    }
 }

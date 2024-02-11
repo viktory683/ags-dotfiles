@@ -1,13 +1,24 @@
 import App from 'resource:///com/github/Aylur/ags/app.js';
 import { readFile } from 'resource:///com/github/Aylur/ags/utils.js';
-// import * as fs from 'fs';
 import * as toml from 'toml';
-import config_t from './types/config';
+import { Config_t, Config } from './types/config';
+import { PathReporter } from 'io-ts/PathReporter';
+import { isLeft } from 'fp-ts/lib/Either';
 
-const tomlConfig = readFile(`${App.configDir}/ags.toml`);
-let config: config_t = toml.parse(tomlConfig);
+const rawConfig = readFile(`${App.configDir}/ags.toml`);
+let parsed = toml.parse(rawConfig);
 
-config.CSS.paths.css = `${App.configDir}${config.CSS?.paths?.css}`;
-config.CSS.paths.scss = `${App.configDir}${config.CSS?.paths?.scss}`;
+parsed.CSS.paths.css = `${App.configDir}${parsed.CSS?.paths?.css}`;
+parsed.CSS.paths.scss = `${App.configDir}${parsed.CSS?.paths?.scss}`;
 
-export default config;
+const decoded = Config.decode(parsed);
+if (isLeft(decoded)) {
+    throw Error(
+        `Could not validate data: ${PathReporter.report(decoded).join('\n')}`,
+    );
+    // e.g.: Could not validate data: Invalid value "foo" supplied to : { userId: number, name: string }/userId: number
+}
+
+const decodedConfig: Config_t = decoded.right;
+
+export default decodedConfig;

@@ -44,6 +44,9 @@ Stopped = ""
 [scratchpad]
 icon = ""
 
+[workspaces]
+'default' = ""
+
 [workspaces.icons]
 '1' = ""
 '2' = ""
@@ -57,7 +60,6 @@ icon = ""
 '10' = ""
 '11' = ""
 '12' = ""
-default = ""
 
 [language.icons]
 'English (US)' = '🇺🇸'
