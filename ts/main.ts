@@ -352,7 +352,8 @@ const Temperature = Widget.Button({
         children: [
             Widget.Label().bind('label', TEMPERATURE, 'value', (v) =>
                 getIconFromArray(
-                    config.temperature.icons.split(''),
+                    // @ts-ignore
+                    config.temperature.icons,
                     v,
                     config.temperature.min,
                     config.temperature.max,
@@ -689,7 +690,11 @@ const Volume = Widget.Button({
                 if (vol > 100) {
                     return config.volume.alert;
                 }
-                return getIconFromArray(config.volume.icons.split(''), vol);
+                return getIconFromArray(
+                    // @ts-ignore
+                    config.volume.icons,
+                    vol,
+                );
             }),
             Widget.Revealer({
                 reveal_child: false,
@@ -773,7 +778,11 @@ const Network = Widget.Button({
             Widget.Label().bind('label', NETWORK, 'value', (v) =>
                 v === null
                     ? config.network.disabled
-                    : getIconFromArray(config.network.icons.split(''), v),
+                    : getIconFromArray(
+                          // @ts-ignore
+                          config.network.icons,
+                          v,
+                      ),
             ),
             Widget.Revealer({
                 transition: 'slide_right',
@@ -830,7 +839,8 @@ const Battery = Widget.Button({
                 }
 
                 self.label = getIconFromArray(
-                    config.battery.icons.split(''),
+                    // @ts-ignore
+                    config.battery.icons,
                     battery.percent,
                 );
             }),
