@@ -1,17 +1,18 @@
-import { exec, execAsync } from 'resource:///com/github/Aylur/ags/utils.js';
+import { execAsync } from 'resource:///com/github/Aylur/ags/utils.js';
 import config from './config';
+import App from 'resource:///com/github/Aylur/ags/app.js';
 
 /**
  * Reloads the CSS by compiling SCSS to CSS.
- * @returns {string} - The path to the compiled CSS file.
  */
-export function reloadCSS(): string {
-    const scssPath = config.CSS.paths.scss;
-    const cssPath = config.CSS.paths.css;
-
-    exec(`sassc ${scssPath} ${cssPath}`);
-
-    return cssPath;
+export function reloadCSS() {
+    execAsync(`sassc ${config.CSS.paths.scss} ${config.CSS.paths.css}`)
+        .then(() => {
+            App.resetCss();
+            App.applyCss(config.CSS.paths.css);
+            if (config.log.level == 'debug') console.log('CSS UPDATED');
+        })
+        .catch((err) => console.error(err));
 }
 
 /**

@@ -1,10 +1,9 @@
-import App from 'resource:///com/github/Aylur/ags/app.js';
 import battery from 'resource:///com/github/Aylur/ags/service/battery.js';
 import {
     exec,
     execAsync,
+    monitorFile,
     readFile,
-    subprocess,
 } from 'resource:///com/github/Aylur/ags/utils.js';
 import Variable from 'resource:///com/github/Aylur/ags/variable.js';
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
@@ -27,33 +26,16 @@ import { Workspace, processWorkspaceEvent } from './sway';
 
 import { format } from 'date-fns';
 
-// TODO forget about inotify and try native file monitor
-// Reload CSS on scss file changes
+// CSS UPDATE
+
 reloadCSS();
 
-// Function to handle CSS updates
-const handleCssUpdate = () => {
-    let cssFilePath = config.CSS.paths.scss.split('/').slice(0, -1).join('/');
-    subprocess(
-        [
-            'inotifywait',
-            '--recursive',
-            '--event',
-            'create,modify',
-            '-m',
-            cssFilePath,
-        ],
-        () => {
-            let cssFile = reloadCSS();
-            App.resetCss();
-            App.applyCss(cssFile);
-            console.log('CSS UPDATED');
-        },
-    );
-};
+monitorFile(config.CSS.paths.scss, (_, event) => {
+    if (event != 1) return;
+    reloadCSS();
+});
 
-// Set up CSS reload on file changes
-handleCssUpdate();
+// ..
 
 // WORKSPACES
 const swayWorkspaces: Variable_t<Workspace[]> = Variable(

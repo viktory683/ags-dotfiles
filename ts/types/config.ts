@@ -81,6 +81,13 @@ export const Config = t.type({
         time: t.string,
         date: t.string,
     }),
+
+    log: t.type({
+        level: t.keyof({
+            info: null,
+            debug: null,
+        }),
+    }),
 });
 
 export type Config_t = t.TypeOf<typeof Config>;

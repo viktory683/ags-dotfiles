@@ -75,3 +75,6 @@ css = "/style.css"
 [clock]
 time = " hh:mm:ss a"
 date = " eee, dd MMM yyyy"
+
+[log]
+level = 'info'
