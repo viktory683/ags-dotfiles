@@ -18,12 +18,10 @@ import {
     getIconByPercentage as getIconFromArray,
     reloadCSS,
     term,
-    updateClassNames,
     wrapMpstat,
 } from './helpers';
-import brightness from './service/brightness.js';
+import brightness from './service/brightness';
 import { Workspace, processWorkspaceEvent } from './sway';
-
 import { format } from 'date-fns';
 
 // CSS UPDATE
@@ -99,11 +97,7 @@ function shouldRevealScratchpad(): boolean {
 }
 
 function updateScratchpadClasses(obj: Connectable<AgsButton> & AgsButton) {
-    obj.class_names = updateClassNames(
-        obj.class_names,
-        'fixed-hover',
-        shouldRevealScratchpad(),
-    );
+    obj.toggleClassName('fixed-hover', shouldRevealScratchpad());
 }
 
 const Scratchpad = Widget.Button({
@@ -176,18 +170,8 @@ const Mode = Widget.Revealer({
         class_names: ['widget', 'mode'],
     }).hook(swayMode, (self) => {
         const oldMode = self.class_names.find((m) => m.startsWith('mode_'));
-        self.class_names = updateClassNames(
-            self.class_names,
-            `mode_${swayMode.value.name}`,
-            true,
-        );
-        if (oldMode) {
-            self.class_names = updateClassNames(
-                self.class_names,
-                oldMode,
-                false,
-            );
-        }
+        self.toggleClassName(`mode_${swayMode.value.name}`, true);
+        if (oldMode) self.toggleClassName(oldMode, false);
     }),
 }).bind('revealChild', swayMode, 'value', (v) => v.name !== 'default');
 
@@ -308,17 +292,12 @@ function revealTemp() {
 }
 
 function updateTempClasses(obj: Connectable<AgsButton> & AgsButton) {
-    obj.class_names = updateClassNames(
-        obj.class_names,
+    obj.toggleClassName(
         'fixed-hover',
         showTemperature.value || showTemperatureFixed.value,
     );
 
-    obj.class_names = updateClassNames(
-        obj.class_names,
-        'urgent',
-        TEMPERATURE.value > config.temperature.max,
-    );
+    obj.toggleClassName('urgent', TEMPERATURE.value > config.temperature.max);
 }
 
 const Temperature = Widget.Button({
@@ -391,17 +370,11 @@ function revealMem() {
 }
 
 function updateMemoryClasses(obj: Connectable<AgsButton> & AgsButton) {
-    obj.class_names = updateClassNames(
-        obj.class_names,
-        'fixed-hover',
-        revealMem(),
-    );
+    obj.toggleClassName('fixed-hover', revealMem());
 
-    const memoryPercentage = getMemoryPercentage(MEMORY.value, 'Mem');
-    obj.class_names = updateClassNames(
-        obj.class_names,
+    obj.toggleClassName(
         'urgent',
-        memoryPercentage > config.memory.alert,
+        getMemoryPercentage(MEMORY.value, 'Mem') > config.memory.alert,
     );
 }
 
@@ -473,17 +446,11 @@ function revealCPU() {
 }
 
 function updateCPUClasses(obj: Connectable<AgsButton> & AgsButton) {
-    obj.class_names = updateClassNames(
-        obj.class_names,
-        'fixed-hover',
-        revealCPU(),
-    );
+    obj.toggleClassName('fixed-hover', revealCPU());
 
-    const avgIdlePercentage = 100 - cpu.value.avg.percent_idle;
-    obj.class_names = updateClassNames(
-        obj.class_names,
+    obj.toggleClassName(
         'urgent',
-        avgIdlePercentage > config.cpu.alert,
+        100 - cpu.value.avg.percent_idle > config.cpu.alert,
     );
 }
 
@@ -541,11 +508,7 @@ function revealBrightness() {
 }
 
 function updateBrightnessClasses(obj: Connectable<AgsButton> & AgsButton) {
-    obj.class_names = updateClassNames(
-        obj.class_names,
-        'fixed-hover',
-        revealBrightness(),
-    );
+    obj.toggleClassName('fixed-hover', revealBrightness());
 }
 
 const Brightness = Widget.Button({
@@ -621,28 +584,16 @@ function revealVol() {
 }
 
 function updateVolumeClasses(obj: Connectable<AgsButton> & AgsButton) {
-    obj.class_names = updateClassNames(
-        obj.class_names,
-        'fixed-hover',
-        revealVol(),
-    );
+    obj.toggleClassName('fixed-hover', revealVol());
 
-    const roundedVolume = Math.round(VOLUME.value.sink.volume);
-    obj.class_names = updateClassNames(
-        obj.class_names,
-        'urgent',
-        roundedVolume > 100,
-    );
+    obj.toggleClassName('urgent', Math.round(VOLUME.value.sink.volume) > 100);
 
-    obj.class_names = updateClassNames(
-        obj.class_names,
-        'disabled',
-        VOLUME.value.sink.mute,
-    );
+    obj.toggleClassName('disabled', VOLUME.value.sink.mute);
 }
 
 const Volume = Widget.Button({
     on_clicked: () => execAsync('pactl set-sink-mute @DEFAULT_SINK@ toggle'),
+    // on_: () => term('/home/god/rsmixer/target/release/rsmixer'),
     on_middle_click: () =>
         (showPulseaudioFixed.value = !showPulseaudioFixed.value),
     on_hover: () => (showPulseaudio.value = true),
@@ -734,17 +685,9 @@ function revealNet() {
 }
 
 function updateNetworkClasses(obj: Connectable<AgsButton> & AgsButton) {
-    obj.class_names = updateClassNames(
-        obj.class_names,
-        'fixed-hover',
-        revealNet(),
-    );
+    obj.toggleClassName('fixed-hover', revealNet());
 
-    obj.class_names = updateClassNames(
-        obj.class_names,
-        'disabled',
-        NETWORK.value === null,
-    );
+    obj.toggleClassName('disabled', NETWORK.value === null);
 }
 
 const Network = Widget.Button({
@@ -794,15 +737,12 @@ function revealBat() {
 }
 
 function updateBatteryClasses(obj: Connectable<AgsButton> & AgsButton) {
-    obj.class_names = updateClassNames(
-        obj.class_names,
-        'fixed-hover',
-        revealBat(),
-    );
+    obj.toggleClassName('fixed-hover', revealBat());
 
-    const isLowBattery =
-        battery.percent <= config.battery.alert && !battery.charging;
-    obj.class_names = updateClassNames(obj.class_names, 'urgent', isLowBattery);
+    obj.toggleClassName(
+        'urgent',
+        battery.percent <= config.battery.alert && !battery.charging,
+    );
 }
 
 const Battery = Widget.Button({

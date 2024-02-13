@@ -24,7 +24,7 @@ export function reloadCSS() {
  * @param {number} out_max - The maximum value of the output range.
  * @returns {number} - The mapped value in the output range.
  */
-export function map(
+function map(
     x: number,
     in_min: number,
     in_max: number,
@@ -64,21 +64,6 @@ export async function term(command: string): Promise<string> {
 }
 
 /**
- * Removes an item from an array.
- * @template T - The type of elements in the array.
- * @param {T[]} arr - Array from which to remove an item.
- * @param {T} value - Item to remove.
- * @returns {T[]} - Array without the specified item.
- */
-function removeItem<T>(arr: T[], value: T): T[] {
-    const index = arr.indexOf(value);
-    if (index > -1) {
-        arr.splice(index, 1);
-    }
-    return arr;
-}
-
-/**
  * `mpstat` wrapper.
  * @param {string} out - Output of `mpstat` in JSON.
  * @returns {object} - Wrapped `mpstat` data.
@@ -101,21 +86,4 @@ export function wrapMpstat(out: string): { avg: any; cores: any[] } {
                     parseInt(coreA.cpu) - parseInt(coreB.cpu),
             ),
     };
-}
-
-/**
- * Update the array of class names based on a specified condition.
- * @param {string[]} classNames - The current array of class names.
- * @param {string} targetClass - The class name to be added or removed.
- * @param {boolean} condition - The condition to determine whether to add or remove the class.
- * @returns {string[]} - The updated array of class names.
- */
-export function updateClassNames(
-    classNames: string[],
-    targetClass: string,
-    condition: boolean,
-): string[] {
-    return condition
-        ? [...classNames, targetClass]
-        : removeItem(classNames, targetClass);
 }
