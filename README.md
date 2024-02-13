@@ -9,10 +9,6 @@ version: `0.1.2`
     - [x] Workspaces
     - [x] Scratchpad
     - [x] Mode
-    - [ ] Mpris
-        - [ ] обрезать длину текста
-        - [ ] Окно по тексту
-        - [ ] Багулю отловить, что статус плеера неизвестен
     - [ ] Clock
         - [x] Clock itself
         - [ ] Calendar
@@ -26,7 +22,7 @@ version: `0.1.2`
     - [x] backlight
     - [x] pulse
     - [x] network
-    - [ ] battery
+    - [x] battery
 - [ ] Hover bug
 
     Странно фиксируются события hover и hoverlost

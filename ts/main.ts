@@ -9,7 +9,6 @@ import Variable from 'resource:///com/github/Aylur/ags/variable.js';
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 import { Connectable } from 'resource:///com/github/Aylur/ags/widgets/widget.js';
 import SystemTray from 'resource:///com/github/Aylur/ags/service/systemtray.js';
-import Mpris from 'resource:///com/github/Aylur/ags/service/mpris.js';
 import AgsButton from 'types/widgets/button';
 import { Variable as Variable_t } from 'types/variable';
 import config from './config';
@@ -643,7 +642,8 @@ const Volume = Widget.Button({
 
 // NETWORK
 
-// TODO
+// TODO wait for jc `1.25.x` build
+// then we can jc iwconfig wlna0
 const NETWORK: Variable_t<null | number> = Variable(null, {
     poll: [
         2000,
