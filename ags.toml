@@ -36,6 +36,9 @@ silent = ""
 alert = ""
 mic = ""
 
+[player]
+shuffle = ''
+
 [player.states]
 Playing = ""
 Paused = ""

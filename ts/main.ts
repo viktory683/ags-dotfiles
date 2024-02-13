@@ -27,6 +27,7 @@ import { Workspace, processWorkspaceEvent } from './sway';
 
 import { format } from 'date-fns';
 
+// TODO forget about inotify and try native file monitor
 // Reload CSS on scss file changes
 reloadCSS();
 
@@ -212,24 +213,19 @@ const Mode = Widget.Revealer({
 
 // MEDIA
 
-// TODO debug
+// TODO add some styles
+// TODO rotate text
 const Media = Widget.Button({
     class_name: 'media',
     on_primary_click: () => Mpris.getPlayer('')?.playPause(),
-    on_scroll_up: () => Mpris.getPlayer('')?.next(),
-    on_scroll_down: () => Mpris.getPlayer('')?.previous(),
-    child: Widget.Label({}).bind('label', Mpris, 'players', (players) => {
-        // TODO iterate over `v` filtering by currently playing
-        const player = Mpris.getPlayer('');
-        if (player) {
-            const status = player.play_back_status;
-            const statusIcon = status ? config.player.states[status] : '';
+    child: Widget.Label().hook(Mpris, (self) => {
+        let player = Mpris.getPlayer();
 
-            return `${statusIcon} ${(player.track_artists || []).join(
-                ', ',
-            )} | ${player.track_title}`;
-        }
-        return 'Nothing is playing';
+        if (player)
+            self.label = `${config.player.states[player.play_back_status]}${
+                player.shuffle_status ? ` ${config.player.shuffle}` : ''
+            } ${player.track_artists.join(', ')} - ${player.track_title}`;
+        else self.label = '';
     }),
 });
 
@@ -256,15 +252,17 @@ const Clock = Widget.Label({
 // TRAY
 
 const SysTray = Widget.Box({
-    class_names: 'widget tray hoverable'.split(' '),
+    class_names: ['widget', 'tray'],
 }).hook(SystemTray, (self) => {
-    self.children = SystemTray.items.map((item) =>
-        Widget.Button({
-            child: Widget.Icon().bind('icon', item, 'icon'),
-            on_primary_click: (_, e) => item.activate(e),
-            on_secondary_click: (_, e) => item.openMenu(e),
-        }).bind('tooltip_markup', item, 'tooltip_markup'),
-    );
+    self.children = SystemTray.items
+        .sort((a, b) => (a.title > b.title ? -1 : 1))
+        .map((item) =>
+            Widget.Button({
+                child: Widget.Icon().bind('icon', item, 'icon'),
+                on_primary_click: (_, e) => item.activate(e),
+                on_secondary_click: (_, e) => item.openMenu(e),
+            }).bind('tooltip_markup', item, 'tooltip_markup'),
+        );
 });
 
 // ...
@@ -732,6 +730,7 @@ const Volume = Widget.Button({
 
 // NETWORK
 
+// TODO my math is bad so with about -17dB there is 166% quality
 const NETWORK: Variable_t<null | number> = Variable(null, {
     poll: [
         2000,

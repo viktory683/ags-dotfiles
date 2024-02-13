@@ -54,6 +54,7 @@ export const Config = t.type({
             Paused: t.string,
             Stopped: t.string,
         }),
+        shuffle: t.string,
     }),
 
     scratchpad: t.type({
