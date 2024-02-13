@@ -94,6 +94,10 @@ window.bar > * > * > *,
     }
 }
 
+.fixed-hover {
+    background-color: lighten($surface, 12%);
+}
+
 .urgent {
     background-color: $error;
     color: $surface;
@@ -116,7 +120,7 @@ window.bar > * > * > *,
 
 window.bar > * > * > * > *,
 .workspace > * {
-    margin: 1.5pt 3pt;
+    margin: 0.75pt 3pt;
     // border: blue solid 1pt;
 }
 

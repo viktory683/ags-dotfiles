@@ -177,26 +177,6 @@ const Mode = Widget.Revealer({
 
 // ...
 
-// MEDIA
-
-// TODO add some styles
-// TODO rotate text
-const Media = Widget.Button({
-    class_name: 'media',
-    on_primary_click: () => Mpris.getPlayer('')?.playPause(),
-    child: Widget.Label().hook(Mpris, (self) => {
-        let player = Mpris.getPlayer();
-
-        if (player)
-            self.label = `${config.player.states[player.play_back_status]}${
-                player.shuffle_status ? ` ${config.player.shuffle}` : ''
-            } ${player.track_artists.join(', ')} - ${player.track_title}`;
-        else self.label = '';
-    }),
-});
-
-// ...
-
 // CLOCK
 
 const time = Variable('', {
@@ -789,7 +769,7 @@ const Battery = Widget.Button({
 
 const Left = Widget.Box({
     class_names: ['modules-left'],
-    children: [Workspaces, Scratchpad, Mode, Media],
+    children: [Workspaces, Scratchpad, Mode],
 });
 
 const Center = Widget.Box({

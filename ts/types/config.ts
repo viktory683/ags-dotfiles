@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { fromNullable } from 'io-ts-types';
+// import { fromNullable } from 'io-ts-types';
 
 // TODO add some default values
 export const Config = t.type({
@@ -46,15 +46,6 @@ export const Config = t.type({
         silent: t.string,
         alert: t.string,
         mic: t.string,
-    }),
-
-    player: t.type({
-        states: t.type({
-            Playing: t.string,
-            Paused: t.string,
-            Stopped: t.string,
-        }),
-        shuffle: t.string,
     }),
 
     scratchpad: t.type({
