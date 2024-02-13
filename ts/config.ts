@@ -23,23 +23,18 @@ const decodedConfig: Config_t = decoded.right;
 decodedConfig.CSS.paths.css = `${App.configDir}${parsed.CSS?.paths?.css}`;
 decodedConfig.CSS.paths.scss = `${App.configDir}${parsed.CSS?.paths?.scss}`;
 
-// TODO refactor
-
-if (typeof decodedConfig.battery.icons === 'string') {
-    decodedConfig.battery.icons = decodedConfig.battery.icons.split('');
+function convertIconsToArray(decodedConfigProperty: {
+    icons: string[] | string;
+}) {
+    if (typeof decodedConfigProperty.icons === 'string') {
+        decodedConfigProperty.icons = decodedConfigProperty.icons.split('');
+    }
 }
 
-if (typeof decodedConfig.temperature.icons === 'string') {
-    decodedConfig.temperature.icons = decodedConfig.temperature.icons.split('');
-}
-
-if (typeof decodedConfig.network.icons === 'string') {
-    decodedConfig.network.icons = decodedConfig.network.icons.split('');
-}
-
-if (typeof decodedConfig.volume.icons === 'string') {
-    decodedConfig.volume.icons = decodedConfig.volume.icons.split('');
-}
+convertIconsToArray(decodedConfig.battery);
+convertIconsToArray(decodedConfig.temperature);
+convertIconsToArray(decodedConfig.network);
+convertIconsToArray(decodedConfig.volume);
 
 // ...
 
