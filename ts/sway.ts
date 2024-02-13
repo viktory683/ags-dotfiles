@@ -5,7 +5,6 @@ enum ChangeTypes {
     Init = 'init',
     Empty = 'empty',
     Urgent = 'urgent',
-    // TODO
     // Reload = 'reload',
     // Rename = 'rename',
     // Restored = 'restored',
@@ -51,7 +50,6 @@ export function processWorkspaceEvent(
             break;
 
         case ChangeTypes.Init:
-            // TODO replace with something like inserting by index
             workspaces.push(current);
             workspaces.sort((a, b) => a.num - b.num);
             break;

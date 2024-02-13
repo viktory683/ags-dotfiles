@@ -663,7 +663,7 @@ const Volume = Widget.Button({
 
 // NETWORK
 
-// TODO my math is bad so with about -17dB there is 166% quality
+// TODO
 const NETWORK: Variable_t<null | number> = Variable(null, {
     poll: [
         2000,
@@ -672,7 +672,7 @@ const NETWORK: Variable_t<null | number> = Variable(null, {
             let data = JSON.parse(out);
             if (data.length === 0) return null;
 
-            return Math.round(2 * (data[0].signal_dbm + 100));
+            return Math.round(1.2 * (data[0].signal_dbm + 100));
         },
     ],
 });
