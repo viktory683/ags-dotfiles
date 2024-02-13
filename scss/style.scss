@@ -65,7 +65,30 @@ $onyx: #404040;
     font-family: 'Bars', 'SF Pro Display', 'Font Awesome 6 Pro Solid',
         'Font Awesome 6 Pro Regular', 'Font Awesome 6 Pro Brands';
     font-size: 10.5pt;
-    // border: 1px solid red; // debug
+    // border: red solid 1pt;
+}
+
+menu {
+    border-radius: 6pt;
+    background-color: $surface24_fake;
+    // background-color: #121212;
+    padding-top: 1.5pt;
+    padding-bottom: 1.5pt;
+}
+
+menu menuitem {
+    // margin-left: 6pt;
+    // margin-right: 6pt;
+    // margin-top: 3pt;
+    // margin-bottom: 3pt;
+
+    padding: 3pt;
+    border-radius: 6pt;
+
+    &:hover {
+        background-color: lighten($surface24_fake, 12%);
+        color: lighten($foreground, 12%)
+    }
 }
 
 window.bar {
@@ -146,4 +169,10 @@ progressbar.vertical > trough > progress {
 
 .urgent progressbar.vertical > trough > progress {
     background-color: $surface;
+}
+
+tooltip.background {
+    background-color: $surface24_fake;
+    border-radius: 6pt;
+    color: #bfc9db;
 }
