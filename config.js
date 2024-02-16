@@ -10,6 +10,7 @@ try {
         '--outdir', outdir,
         '--external', 'resource://*',
         '--external', 'gi://*',
+        '--target', 'bun',
     ])
 } catch (error) {
     console.error(error)

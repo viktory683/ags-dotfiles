@@ -11,14 +11,17 @@ alert = ""
 min = 45
 max = 75
 path = "/sys/class/thermal/thermal_zone0/temp"
+interval = 1000
 
 [memory]
 icon = ""
 alert = 80
+interval = 1000
 
 [cpu]
 icon = ""
 alert = 90
+interval = 1000
 
 [brightness]
 icon = ""

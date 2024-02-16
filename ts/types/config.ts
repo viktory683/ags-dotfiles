@@ -17,16 +17,19 @@ export const Config = t.type({
         min: t.number,
         max: t.number,
         path: t.string,
+        interval: t.number,
     }),
 
     memory: t.type({
         icon: t.string,
         alert: t.number,
+        interval: t.number,
     }),
 
     cpu: t.type({
         icon: t.string,
         alert: t.number,
+        interval: t.number
     }),
 
     brightness: t.type({

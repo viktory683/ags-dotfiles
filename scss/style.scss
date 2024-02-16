@@ -1,5 +1,7 @@
 // top | right | bottom | left
 
+
+// https://m2.material.io/design/color/dark-theme.html
 $surface: #121212;
 // $surface1dp: rgba($surface, .05);
 // $surface2dp: rgba($surface, .07);
@@ -87,7 +89,7 @@ menu menuitem {
 
     &:hover {
         background-color: lighten($surface24_fake, 12%);
-        color: lighten($foreground, 12%)
+        color: lighten($foreground, 12%);
     }
 }
 
@@ -95,7 +97,6 @@ window.bar {
     color: $foreground;
     background-color: $surface;
     border-radius: 0 0 6pt 6pt;
-    border-bottom: lighten($surface, 16) solid 1.5pt;
 }
 
 window.bar > * {
@@ -105,10 +106,8 @@ window.bar > * {
 // widget container
 window.bar > * > * > *,
 .workspace {
-    // border-color: blue;
     margin-left: 1.5pt;
     margin-right: 1.5pt;
-    // background-color: lighten($surface, 12);
     border-radius: 3pt;
 
     &:hover {
@@ -117,8 +116,23 @@ window.bar > * > * > *,
     }
 }
 
+.workspace:first-child {
+    margin-left: 0;
+}
+
 .fixed-hover {
     background-color: lighten($surface, 12%);
+    color: lighten($foreground, 12%);
+}
+
+.disabled {
+    background-color: lighten($surface, 9%);
+    color: $disabled;
+
+    &:hover {
+        background-color: lighten($surface, 12%);
+        color: lighten($disabled, 12%);
+    }
 }
 
 .urgent {
@@ -141,9 +155,10 @@ window.bar > * > * > *,
     }
 }
 
-window.bar > * > * > * > *,
-.workspace > * {
-    margin: 0.75pt 3pt;
+window.bar > * > * > * > *:not(.workspace)
+,.workspace > *
+{
+    margin: 2pt 4pt;
     // border: blue solid 1pt;
 }
 

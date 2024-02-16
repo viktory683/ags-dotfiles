@@ -258,7 +258,7 @@ const Language = Widget.Button({
 
 const TEMPERATURE = Variable(0, {
     poll: [
-        2000,
+        config.temperature.interval,
         () => parseInt(readFile(config.temperature.path).trim()) / 1000,
     ],
 });
@@ -338,7 +338,7 @@ type mem_t = {
 };
 
 const MEMORY: Variable_t<mem_t[]> = Variable([], {
-    poll: [2000, () => JSON.parse(exec('jc free -tvw --si'))],
+    poll: [config.memory.interval, () => JSON.parse(exec('jc free -tvw --si'))],
 });
 
 const showMemory = Variable(false);
@@ -414,7 +414,11 @@ const Memory = Widget.Button({
 // CPU
 
 const cpu = Variable(wrapMpstat(exec('jc mpstat -P ALL')), {
-    poll: [2000, 'jc mpstat -P ALL 2 1', (out) => wrapMpstat(out)],
+    poll: [
+        config.cpu.interval,
+        `jc mpstat -P ALL ${config.cpu.interval / 1000} 1`,
+        (out) => wrapMpstat(out),
+    ],
 });
 
 const showCpuCores = Variable(false);
@@ -703,7 +707,8 @@ const Network = Widget.Button({
     }),
 })
     .hook(showNetwork, updateNetworkClasses)
-    .hook(showNetworkFixed, updateNetworkClasses);
+    .hook(showNetworkFixed, updateNetworkClasses)
+    .hook(NETWORK, updateNetworkClasses);
 
 // ...
 
