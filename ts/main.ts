@@ -7,9 +7,7 @@ import {
 } from 'resource:///com/github/Aylur/ags/utils.js';
 import Variable from 'resource:///com/github/Aylur/ags/variable.js';
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
-import { Connectable } from 'resource:///com/github/Aylur/ags/widgets/widget.js';
 import SystemTray from 'resource:///com/github/Aylur/ags/service/systemtray.js';
-import AgsButton from 'types/widgets/button';
 import { Variable as Variable_t } from 'types/variable';
 import config from './config';
 import { InputDevice, TreeNode, XkbLayoutChange, mode_t } from './types/sway';
@@ -22,6 +20,9 @@ import {
 import brightness from './service/brightness';
 import { Workspace, processWorkspaceEvent } from './sway';
 import { format } from 'date-fns';
+import { Button } from 'resource:///com/github/Aylur/ags/widgets/button.js';
+// @ts-ignore
+import Gtk from 'gi://Gtk?version=3.0';
 
 // CSS UPDATE
 
@@ -95,7 +96,7 @@ function shouldRevealScratchpad(): boolean {
     );
 }
 
-function updateScratchpadClasses(obj: Connectable<AgsButton> & AgsButton) {
+function updateScratchpadClasses(obj: Button<Gtk.Widget, unknown>) {
     obj.toggleClassName('fixed-hover', shouldRevealScratchpad());
 }
 
@@ -119,18 +120,21 @@ const Scratchpad = Widget.Button({
                 ),
             })
                 .bind(
+                    // @ts-ignore
                     'reveal_child',
                     showScratchpad,
                     'value',
                     shouldRevealScratchpad,
                 )
                 .bind(
+                    // @ts-ignore
                     'reveal_child',
                     showScratchpadFixed,
                     'value',
                     shouldRevealScratchpad,
                 )
                 .bind(
+                    // @ts-ignore
                     'reveal_child',
                     swayScratchpad,
                     'value',
@@ -172,7 +176,13 @@ const Mode = Widget.Revealer({
         self.toggleClassName(`mode_${swayMode.value.name}`, true);
         if (oldMode) self.toggleClassName(oldMode, false);
     }),
-}).bind('revealChild', swayMode, 'value', (v) => v.name !== 'default');
+}).bind(
+    // @ts-ignore
+    'revealChild',
+    swayMode,
+    'value',
+    (v) => v.name !== 'default',
+);
 
 // ...
 
@@ -190,7 +200,12 @@ const Clock = Widget.Label({
     class_names: ['clock', 'widget'],
 })
     .bind('label', time)
-    .bind('tooltip_markup', date, 'value');
+    .bind(
+        // @ts-ignore
+        'tooltip_markup',
+        date,
+        'value',
+    );
 
 // ...
 
@@ -206,7 +221,12 @@ const SysTray = Widget.Box({
                 child: Widget.Icon().bind('icon', item, 'icon'),
                 on_primary_click: (_, e) => item.activate(e),
                 on_secondary_click: (_, e) => item.openMenu(e),
-            }).bind('tooltip_markup', item, 'tooltip_markup'),
+            }).bind(
+                // @ts-ignore
+                'tooltip_markup',
+                item,
+                'tooltip_markup',
+            ),
         );
 });
 
@@ -249,7 +269,11 @@ const Language = Widget.Button({
     class_names: ['widget'],
     child: Widget.Label()
         .bind('label', lang, 'value', (v) => config.language.icons[v] || v)
-        .bind('tooltip_text', lang),
+        .bind(
+            // @ts-ignore
+            'tooltip_text',
+            lang,
+        ),
 });
 
 // ...
@@ -270,7 +294,7 @@ function revealTemp() {
     return showTemperature.value || showTemperatureFixed.value;
 }
 
-function updateTempClasses(obj: Connectable<AgsButton> & AgsButton) {
+function updateTempClasses(obj: Button<Gtk.Widget, unknown>) {
     obj.toggleClassName(
         'fixed-hover',
         showTemperature.value || showTemperatureFixed.value,
@@ -308,8 +332,15 @@ const Temperature = Widget.Button({
                     (v) => `${v}º`,
                 ),
             })
-                .bind('reveal_child', showTemperature, 'value', revealTemp)
                 .bind(
+                    // @ts-ignore
+                    'reveal_child',
+                    showTemperature,
+                    'value',
+                    revealTemp,
+                )
+                .bind(
+                    // @ts-ignore
                     'reveal_child',
                     showTemperatureFixed,
                     'value',
@@ -348,7 +379,7 @@ function revealMem() {
     return showMemory.value || showMemoryFixed.value;
 }
 
-function updateMemoryClasses(obj: Connectable<AgsButton> & AgsButton) {
+function updateMemoryClasses(obj: Button<Gtk.Widget, unknown>) {
     obj.toggleClassName('fixed-hover', revealMem());
 
     obj.toggleClassName(
@@ -400,8 +431,20 @@ const Memory = Widget.Button({
                     ],
                 }),
             })
-                .bind('reveal_child', showMemory, 'value', revealMem)
-                .bind('reveal_child', showMemoryFixed, 'value', revealMem),
+                .bind(
+                    // @ts-ignore
+                    'reveal_child',
+                    showMemory,
+                    'value',
+                    revealMem,
+                )
+                .bind(
+                    // @ts-ignore
+                    'reveal_child',
+                    showMemoryFixed,
+                    'value',
+                    revealMem,
+                ),
         ],
     }),
 })
@@ -428,7 +471,7 @@ function revealCPU() {
     return showCpuCores.value || showCpuCoresFixed.value;
 }
 
-function updateCPUClasses(obj: Connectable<AgsButton> & AgsButton) {
+function updateCPUClasses(obj: Button<Gtk.Widget, unknown>) {
     obj.toggleClassName('fixed-hover', revealCPU());
 
     obj.toggleClassName(
@@ -470,8 +513,20 @@ const CPU = Widget.Button({
                     ),
                 }),
             })
-                .bind('reveal_child', showCpuCores, 'value', revealCPU)
-                .bind('reveal_child', showCpuCoresFixed, 'value', revealCPU),
+                .bind(
+                    // @ts-ignore
+                    'reveal_child',
+                    showCpuCores,
+                    'value',
+                    revealCPU,
+                )
+                .bind(
+                    // @ts-ignore
+                    'reveal_child',
+                    showCpuCoresFixed,
+                    'value',
+                    revealCPU,
+                ),
         ],
     }),
 })
@@ -490,7 +545,7 @@ function revealBrightness() {
     return showBrightness.value || showBrightnessFixed.value;
 }
 
-function updateBrightnessClasses(obj: Connectable<AgsButton> & AgsButton) {
+function updateBrightnessClasses(obj: Button<Gtk.Widget, unknown>) {
     obj.toggleClassName('fixed-hover', revealBrightness());
 }
 
@@ -515,8 +570,15 @@ const Brightness = Widget.Button({
                     class_names: ['progress', 'vertical'],
                 }).bind('value', brightness, 'screen_value'),
             })
-                .bind('reveal_child', showBrightness, 'value', revealBrightness)
                 .bind(
+                    // @ts-ignore
+                    'reveal_child',
+                    showBrightness,
+                    'value',
+                    revealBrightness,
+                )
+                .bind(
+                    // @ts-ignore
                     'reveal_child',
                     showBrightnessFixed,
                     'value',
@@ -525,7 +587,13 @@ const Brightness = Widget.Button({
         ],
     }),
 })
-    .bind('visible', brightness, 'screen_value', (v) => v < 1)
+    .bind(
+        // @ts-ignore
+        'visible',
+        brightness,
+        'screen_value',
+        (v) => v < 1,
+    )
     .hook(showBrightness, updateBrightnessClasses)
     .hook(showBrightnessFixed, updateBrightnessClasses);
 
@@ -566,7 +634,7 @@ function revealVol() {
     return (hovered || show) && vol > 0;
 }
 
-function updateVolumeClasses(obj: Connectable<AgsButton> & AgsButton) {
+function updateVolumeClasses(obj: Button<Gtk.Widget, unknown>) {
     obj.toggleClassName('fixed-hover', revealVol());
 
     obj.toggleClassName('urgent', Math.round(VOLUME.value.sink.volume) > 100);
@@ -587,6 +655,7 @@ const Volume = Widget.Button({
         class_names: ['pulseaudio'],
         children: [
             Widget.Label({ label: config.volume.bluetooth }).bind(
+                // @ts-ignore
                 'visible',
                 VOLUME,
                 'value',
@@ -621,12 +690,31 @@ const Volume = Widget.Button({
                     (v) => `${Math.round(v['sink']['volume'])}%`,
                 ),
             })
-                .bind('revealChild', VOLUME, 'value', revealVol)
-                .bind('revealChild', showPulseaudio, 'value', revealVol)
-                .bind('revealChild', showPulseaudioFixed, 'value', revealVol),
+                .bind(
+                    // @ts-ignore
+                    'revealChild',
+                    VOLUME,
+                    'value',
+                    revealVol,
+                )
+                .bind(
+                    // @ts-ignore
+                    'revealChild',
+                    showPulseaudio,
+                    'value',
+                    revealVol,
+                )
+                .bind(
+                    // @ts-ignore
+                    'revealChild',
+                    showPulseaudioFixed,
+                    'value',
+                    revealVol,
+                ),
             Widget.Box({
                 children: [
                     Widget.Label({ label: config.volume.bluetooth }).bind(
+                        // @ts-ignore
                         'visible',
                         VOLUME,
                         'value',
@@ -634,7 +722,13 @@ const Volume = Widget.Button({
                     ),
                     Widget.Label({ label: config.volume.mic }),
                 ],
-            }).bind('visible', VOLUME, 'value', (v) => !v['source']['mute']),
+            }).bind(
+                // @ts-ignore
+                'visible',
+                VOLUME,
+                'value',
+                (v) => !v['source']['mute'],
+            ),
         ],
     }),
 })
@@ -668,7 +762,7 @@ function revealNet() {
     return showNetwork.value || showNetworkFixed.value;
 }
 
-function updateNetworkClasses(obj: Connectable<AgsButton> & AgsButton) {
+function updateNetworkClasses(obj: Button<Gtk.Widget, unknown>) {
     obj.toggleClassName('fixed-hover', revealNet());
 
     obj.toggleClassName('disabled', NETWORK.value === null);
@@ -700,9 +794,27 @@ const Network = Widget.Button({
                     v !== null ? `${v}%` : '',
                 ),
             })
-                .bind('reveal_child', showNetwork, 'value', revealNet)
-                .bind('reveal_child', showNetworkFixed, 'value', revealNet)
-                .bind('visible', NETWORK, 'value', (v) => v !== null),
+                .bind(
+                    // @ts-ignore
+                    'reveal_child',
+                    showNetwork,
+                    'value',
+                    revealNet,
+                )
+                .bind(
+                    // @ts-ignore
+                    'reveal_child',
+                    showNetworkFixed,
+                    'value',
+                    revealNet,
+                )
+                .bind(
+                    // @ts-ignore
+                    'visible',
+                    NETWORK,
+                    'value',
+                    (v) => v !== null,
+                ),
         ],
     }),
 })
@@ -721,7 +833,7 @@ function revealBat() {
     return showBattery.value || showBatteryFixed.value;
 }
 
-function updateBatteryClasses(obj: Connectable<AgsButton> & AgsButton) {
+function updateBatteryClasses(obj: Button<Gtk.Widget, unknown>) {
     obj.toggleClassName('fixed-hover', revealBat());
 
     obj.toggleClassName(
@@ -761,8 +873,20 @@ const Battery = Widget.Button({
                     (v) => `${Math.round(v)}%`,
                 ),
             })
-                .bind('reveal_child', showBattery, 'value', revealBat)
-                .bind('reveal_child', showBatteryFixed, 'value', revealBat),
+                .bind(
+                    // @ts-ignore
+                    'reveal_child',
+                    showBattery,
+                    'value',
+                    revealBat,
+                )
+                .bind(
+                    // @ts-ignore
+                    'reveal_child',
+                    showBatteryFixed,
+                    'value',
+                    revealBat,
+                ),
         ],
     }),
 })
