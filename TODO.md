@@ -9,6 +9,8 @@
     - [ ] Tray
     - [ ] runcat
     - [ ] touchpad
+    - [ ] CPU
+      - [ ] использовать для чтения потоковый парсер `mpstat-s`
 - [ ] Hover bug
 
     Странно фиксируются события hover и hoverlost
