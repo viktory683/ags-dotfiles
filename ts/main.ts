@@ -20,9 +20,6 @@ import {
 import brightness from './service/brightness';
 import { Workspace, processWorkspaceEvent } from './sway';
 import { format } from 'date-fns';
-import { Button } from 'resource:///com/github/Aylur/ags/widgets/button.js';
-// @ts-ignore
-import Gtk from 'gi://Gtk?version=3.0';
 
 // CSS UPDATE
 
@@ -48,25 +45,27 @@ const swayWorkspaces: Variable_t<Workspace[]> = Variable(
 
 const Workspaces = Widget.Box({
     class_names: ['workspaces'],
-}).bind('children', swayWorkspaces, 'value', (workspaces) =>
-    workspaces.map((workspace) =>
-        Widget.Button({
-            on_clicked: () => execAsync(`swaymsg workspace ${workspace.name}`),
-            child: Widget.Label({
-                label:
-                    config.workspaces.icons[workspace.name] ||
-                    config.workspaces.icons['default'],
+    children: swayWorkspaces.bind().as((workspaces) =>
+        workspaces.map((workspace) =>
+            Widget.Button({
+                on_clicked: () =>
+                    execAsync(`swaymsg workspace ${workspace.name}`),
+                child: Widget.Label({
+                    label:
+                        config.workspaces.icons[workspace.name] ||
+                        config.workspaces.icons['default'],
+                }),
+                class_names: [
+                    'workspace',
+                    'widget',
+                    `${workspace.focused ? 'focused' : ''}`,
+                    `${workspace.visible ? 'visible' : ''}`,
+                    `${workspace.urgent ? 'urgent' : ''}`,
+                ],
             }),
-            class_names: [
-                'workspace',
-                'widget',
-                `${workspace.focused ? 'focused' : ''}`,
-                `${workspace.visible ? 'visible' : ''}`,
-                `${workspace.urgent ? 'urgent' : ''}`,
-            ],
-        }),
+        ),
     ),
-);
+});
 
 // ...
 
@@ -88,15 +87,16 @@ const swayScratchpad = Variable(getScratchWindowsCount(), {
 const showScratchpad = Variable(false);
 const showScratchpadFixed = Variable(false);
 
-function shouldRevealScratchpad(): boolean {
-    return (
-        showScratchpad.value ||
-        showScratchpadFixed.value ||
-        swayScratchpad.value > 0
-    );
+const shouldRevealScratchpad = () =>
+    showScratchpad.value ||
+    showScratchpadFixed.value ||
+    swayScratchpad.value > 0;
+
+function revealScratchpad(obj) {
+    obj.reveal_child = shouldRevealScratchpad();
 }
 
-function updateScratchpadClasses(obj: Button<Gtk.Widget, unknown>) {
+function updateScratchpadClasses(obj) {
     obj.toggleClassName('fixed-hover', shouldRevealScratchpad());
 }
 
@@ -112,34 +112,13 @@ const Scratchpad = Widget.Button({
                 class_names: ['revealer'],
                 transition: 'slide_right',
                 transition_duration: 500,
-                child: Widget.Label().bind(
-                    'label',
-                    swayScratchpad,
-                    'value',
-                    (scratchCount) => `${scratchCount}`,
-                ),
+                child: Widget.Label({
+                    label: swayScratchpad.bind().as((v) => `${v}`),
+                }),
             })
-                .bind(
-                    // @ts-ignore
-                    'reveal_child',
-                    showScratchpad,
-                    'value',
-                    shouldRevealScratchpad,
-                )
-                .bind(
-                    // @ts-ignore
-                    'reveal_child',
-                    showScratchpadFixed,
-                    'value',
-                    shouldRevealScratchpad,
-                )
-                .bind(
-                    // @ts-ignore
-                    'reveal_child',
-                    swayScratchpad,
-                    'value',
-                    shouldRevealScratchpad,
-                ),
+                .hook(showScratchpad, revealScratchpad)
+                .hook(showScratchpadFixed, revealScratchpad)
+                .hook(swayScratchpad, revealScratchpad),
         ],
     }),
 })
@@ -164,6 +143,7 @@ const swayMode: Variable_t<mode_t> = Variable(
 const Mode = Widget.Revealer({
     transition_duration: 500,
     transition: 'slide_right',
+    revealChild: swayMode.bind().as((v) => v.name !== 'default'),
     child: Widget.Button({
         on_clicked: () => execAsync('swaymsg mode default'),
         child: Widget.Label().hook(swayMode, (self) => {
@@ -176,13 +156,7 @@ const Mode = Widget.Revealer({
         self.toggleClassName(`mode_${swayMode.value.name}`, true);
         if (oldMode) self.toggleClassName(oldMode, false);
     }),
-}).bind(
-    // @ts-ignore
-    'revealChild',
-    swayMode,
-    'value',
-    (v) => v.name !== 'default',
-);
+});
 
 // ...
 
@@ -198,14 +172,9 @@ const date = Variable('', {
 
 const Clock = Widget.Label({
     class_names: ['clock', 'widget'],
-})
-    .bind('label', time)
-    .bind(
-        // @ts-ignore
-        'tooltip_markup',
-        date,
-        'value',
-    );
+    label: time.bind(),
+    tooltip_text: date.bind(),
+});
 
 // ...
 
@@ -221,12 +190,8 @@ const SysTray = Widget.Box({
                 child: Widget.Icon().bind('icon', item, 'icon'),
                 on_primary_click: (_, e) => item.activate(e),
                 on_secondary_click: (_, e) => item.openMenu(e),
-            }).bind(
-                // @ts-ignore
-                'tooltip_markup',
-                item,
-                'tooltip_markup',
-            ),
+                tooltip_text: item.bind('tooltip_markup'),
+            }),
         );
 });
 
@@ -267,13 +232,10 @@ const Language = Widget.Button({
     on_clicked: () =>
         execAsync('swaymsg input type:keyboard xkb_switch_layout next'),
     class_names: ['widget'],
-    child: Widget.Label()
-        .bind('label', lang, 'value', (v) => config.language.icons[v] || v)
-        .bind(
-            // @ts-ignore
-            'tooltip_text',
-            lang,
-        ),
+    child: Widget.Label({
+        label: lang.bind().as((v) => config.language.icons[v] || v),
+        tooltip_text: lang.bind(),
+    }),
 });
 
 // ...
@@ -290,15 +252,15 @@ const TEMPERATURE = Variable(0, {
 const showTemperature = Variable(false);
 const showTemperatureFixed = Variable(false);
 
-function revealTemp() {
-    return showTemperature.value || showTemperatureFixed.value;
+const shouldRevealTemp = () =>
+    showTemperature.value || showTemperatureFixed.value;
+
+function revealTemp(obj) {
+    obj.reveal_child = shouldRevealTemp();
 }
 
-function updateTempClasses(obj: Button<Gtk.Widget, unknown>) {
-    obj.toggleClassName(
-        'fixed-hover',
-        showTemperature.value || showTemperatureFixed.value,
-    );
+function updateTempClasses(obj) {
+    obj.toggleClassName('fixed-hover', shouldRevealTemp());
 
     obj.toggleClassName('urgent', TEMPERATURE.value > config.temperature.max);
 }
@@ -312,40 +274,27 @@ const Temperature = Widget.Button({
     child: Widget.Box({
         class_names: ['temp'],
         children: [
-            Widget.Label().bind('label', TEMPERATURE, 'value', (v) =>
-                getIconFromArray(
-                    // @ts-ignore
-                    config.temperature.icons,
-                    v,
-                    config.temperature.min,
-                    config.temperature.max,
+            Widget.Label({
+                label: TEMPERATURE.bind().as((v) =>
+                    getIconFromArray(
+                        // @ts-ignore
+                        config.temperature.icons,
+                        v,
+                        config.temperature.min,
+                        config.temperature.max,
+                    ),
                 ),
-            ),
+            }),
             Widget.Revealer({
                 transition_duration: 500,
                 transition: 'slide_right',
                 class_names: ['revealer', 'right'],
-                child: Widget.Label().bind(
-                    'label',
-                    TEMPERATURE,
-                    'value',
-                    (v) => `${v}º`,
-                ),
+                child: Widget.Label({
+                    label: TEMPERATURE.bind().as((v) => `${v}º`),
+                }),
             })
-                .bind(
-                    // @ts-ignore
-                    'reveal_child',
-                    showTemperature,
-                    'value',
-                    revealTemp,
-                )
-                .bind(
-                    // @ts-ignore
-                    'reveal_child',
-                    showTemperatureFixed,
-                    'value',
-                    revealTemp,
-                ),
+                .hook(showTemperature, revealTemp)
+                .hook(showTemperatureFixed, revealTemp),
         ],
     }),
 })
@@ -375,12 +324,14 @@ const MEMORY: Variable_t<mem_t[]> = Variable([], {
 const showMemory = Variable(false);
 const showMemoryFixed = Variable(false);
 
-function revealMem() {
-    return showMemory.value || showMemoryFixed.value;
+const shouldRevealMem = () => showMemory.value || showMemoryFixed.value;
+
+function revealMem(obj) {
+    obj.reveal_child = shouldRevealMem();
 }
 
-function updateMemoryClasses(obj: Button<Gtk.Widget, unknown>) {
-    obj.toggleClassName('fixed-hover', revealMem());
+function updateMemoryClasses(obj) {
+    obj.toggleClassName('fixed-hover', shouldRevealMem());
 
     obj.toggleClassName(
         'urgent',
@@ -403,12 +354,8 @@ function createMemoryProgressBar(type: string) {
         vertical: true,
         inverted: true,
         class_names: ['progress', 'vertical'],
-    }).bind(
-        'value',
-        MEMORY,
-        'value',
-        (v) => getMemoryPercentage(v, type) / 100,
-    );
+        value: MEMORY.bind().as((v) => getMemoryPercentage(v, type) / 100),
+    });
 }
 
 const Memory = Widget.Button({
@@ -431,20 +378,8 @@ const Memory = Widget.Button({
                     ],
                 }),
             })
-                .bind(
-                    // @ts-ignore
-                    'reveal_child',
-                    showMemory,
-                    'value',
-                    revealMem,
-                )
-                .bind(
-                    // @ts-ignore
-                    'reveal_child',
-                    showMemoryFixed,
-                    'value',
-                    revealMem,
-                ),
+                .hook(showMemory, revealMem)
+                .hook(showMemoryFixed, revealMem),
         ],
     }),
 })
@@ -467,12 +402,14 @@ const cpu = Variable(wrapMpstat(exec('jc mpstat -P ALL')), {
 const showCpuCores = Variable(false);
 const showCpuCoresFixed = Variable(false);
 
-function revealCPU() {
-    return showCpuCores.value || showCpuCoresFixed.value;
+const shouldRevealCPU = () => showCpuCores.value || showCpuCoresFixed.value;
+
+function revealCPU(obj) {
+    obj.reveal_child = shouldRevealCPU();
 }
 
-function updateCPUClasses(obj: Button<Gtk.Widget, unknown>) {
-    obj.toggleClassName('fixed-hover', revealCPU());
+function updateCPUClasses(obj) {
+    obj.toggleClassName('fixed-hover', shouldRevealCPU());
 
     obj.toggleClassName(
         'urgent',
@@ -500,33 +437,21 @@ const CPU = Widget.Button({
                             vertical: true,
                             inverted: true,
                             class_names: ['progress', 'vertical'],
-                        }).bind(
-                            'value',
-                            cpu,
-                            'value',
-                            (cpuStat) =>
-                                (100 -
-                                    cpuStat.cores[parseInt(core.cpu)]
-                                        .percent_idle) /
-                                100,
-                        ),
+                            value: cpu
+                                .bind()
+                                .as(
+                                    (cpuStat) =>
+                                        (100 -
+                                            cpuStat.cores[parseInt(core.cpu)]
+                                                .percent_idle) /
+                                        100,
+                                ),
+                        }),
                     ),
                 }),
             })
-                .bind(
-                    // @ts-ignore
-                    'reveal_child',
-                    showCpuCores,
-                    'value',
-                    revealCPU,
-                )
-                .bind(
-                    // @ts-ignore
-                    'reveal_child',
-                    showCpuCoresFixed,
-                    'value',
-                    revealCPU,
-                ),
+                .hook(showCpuCores, revealCPU)
+                .hook(showCpuCoresFixed, revealCPU),
         ],
     }),
 })
@@ -541,12 +466,15 @@ const CPU = Widget.Button({
 const showBrightness = Variable(false);
 const showBrightnessFixed = Variable(false);
 
-function revealBrightness() {
-    return showBrightness.value || showBrightnessFixed.value;
+const shouldRevealBrightness = () =>
+    showBrightness.value || showBrightnessFixed.value;
+
+function RevealBrightness(obj) {
+    obj.reveal_child = shouldRevealBrightness();
 }
 
-function updateBrightnessClasses(obj: Button<Gtk.Widget, unknown>) {
-    obj.toggleClassName('fixed-hover', revealBrightness());
+function updateBrightnessClasses(obj) {
+    obj.toggleClassName('fixed-hover', shouldRevealBrightness());
 }
 
 const Brightness = Widget.Button({
@@ -556,6 +484,7 @@ const Brightness = Widget.Button({
         (showBrightnessFixed.value = !showBrightnessFixed.value),
     on_scroll_up: () => execAsync('brightnessctl -e s 1-%'),
     on_scroll_down: () => execAsync('brightnessctl -e s 1+%'),
+    visible: brightness.bind('screen_value').as((v) => v < 1),
     child: Widget.Box({
         class_names: ['brightness'],
         children: [
@@ -568,32 +497,14 @@ const Brightness = Widget.Button({
                     vertical: true,
                     inverted: true,
                     class_names: ['progress', 'vertical'],
-                }).bind('value', brightness, 'screen_value'),
+                    value: brightness.bind('screen_value'),
+                }),
             })
-                .bind(
-                    // @ts-ignore
-                    'reveal_child',
-                    showBrightness,
-                    'value',
-                    revealBrightness,
-                )
-                .bind(
-                    // @ts-ignore
-                    'reveal_child',
-                    showBrightnessFixed,
-                    'value',
-                    revealBrightness,
-                ),
+                .hook(showBrightness, RevealBrightness)
+                .hook(showBrightnessFixed, RevealBrightness),
         ],
     }),
 })
-    .bind(
-        // @ts-ignore
-        'visible',
-        brightness,
-        'screen_value',
-        (v) => v < 1,
-    )
     .hook(showBrightness, updateBrightnessClasses)
     .hook(showBrightnessFixed, updateBrightnessClasses);
 
@@ -627,15 +538,16 @@ const VOLUME = Variable(
 const showPulseaudioFixed = Variable(false);
 const showPulseaudio = Variable(false);
 
-function revealVol() {
-    const hovered = showPulseaudio.value;
-    const show = showPulseaudioFixed.value;
-    const vol = VOLUME.value['sink']['volume'];
-    return (hovered || show) && vol > 0;
+const shouldRevealVol = () =>
+    (showPulseaudio.value || showPulseaudioFixed.value) &&
+    VOLUME.value['sink']['volume'] > 0;
+
+function revealVol(obj) {
+    obj.reveal_child = shouldRevealVol();
 }
 
-function updateVolumeClasses(obj: Button<Gtk.Widget, unknown>) {
-    obj.toggleClassName('fixed-hover', revealVol());
+function updateVolumeClasses(obj) {
+    obj.toggleClassName('fixed-hover', shouldRevealVol());
 
     obj.toggleClassName('urgent', Math.round(VOLUME.value.sink.volume) > 100);
 
@@ -644,7 +556,6 @@ function updateVolumeClasses(obj: Button<Gtk.Widget, unknown>) {
 
 const Volume = Widget.Button({
     on_clicked: () => execAsync('pactl set-sink-mute @DEFAULT_SINK@ toggle'),
-    // on_: () => term('/home/god/rsmixer/target/release/rsmixer'),
     on_middle_click: () =>
         (showPulseaudioFixed.value = !showPulseaudioFixed.value),
     on_hover: () => (showPulseaudio.value = true),
@@ -654,81 +565,53 @@ const Volume = Widget.Button({
         spacing: 2,
         class_names: ['pulseaudio'],
         children: [
-            Widget.Label({ label: config.volume.bluetooth }).bind(
-                // @ts-ignore
-                'visible',
-                VOLUME,
-                'value',
-                (v) => v['sink']['bluez'],
-            ),
-            Widget.Label().bind('label', VOLUME, 'value', (v) => {
-                if (v['sink']['mute']) {
-                    return config.volume.muted;
-                }
+            Widget.Label({
+                label: config.volume.bluetooth,
+                visible: VOLUME.bind().as((v) => v['sink']['bluez']),
+            }),
+            Widget.Label({
+                label: VOLUME.bind().as((v) => {
+                    if (v['sink']['mute']) {
+                        return config.volume.muted;
+                    }
 
-                const vol = Math.round(v['sink']['volume']);
-                if (vol === 0) {
-                    return config.volume.silent;
-                }
-                if (vol > 100) {
-                    return config.volume.alert;
-                }
-                return getIconFromArray(
-                    // @ts-ignore
-                    config.volume.icons,
-                    vol,
-                );
+                    const vol = Math.round(v['sink']['volume']);
+                    if (vol === 0) {
+                        return config.volume.silent;
+                    }
+                    if (vol > 100) {
+                        return config.volume.alert;
+                    }
+                    return getIconFromArray(
+                        // @ts-ignore
+                        config.volume.icons,
+                        vol,
+                    );
+                }),
             }),
             Widget.Revealer({
                 reveal_child: false,
                 transition: 'slide_right',
                 class_names: ['revealer'],
-                child: Widget.Label().bind(
-                    'label',
-                    VOLUME,
-                    'value',
-                    (v) => `${Math.round(v['sink']['volume'])}%`,
-                ),
-            })
-                .bind(
-                    // @ts-ignore
-                    'revealChild',
-                    VOLUME,
-                    'value',
-                    revealVol,
-                )
-                .bind(
-                    // @ts-ignore
-                    'revealChild',
-                    showPulseaudio,
-                    'value',
-                    revealVol,
-                )
-                .bind(
-                    // @ts-ignore
-                    'revealChild',
-                    showPulseaudioFixed,
-                    'value',
-                    revealVol,
-                ),
-            Widget.Box({
-                children: [
-                    Widget.Label({ label: config.volume.bluetooth }).bind(
-                        // @ts-ignore
-                        'visible',
-                        VOLUME,
-                        'value',
-                        (v) => v['source']['bluez'],
+                child: Widget.Label({
+                    label: VOLUME.bind().as(
+                        (v) => `${Math.round(v['sink']['volume'])}%`,
                     ),
+                }),
+            })
+                .hook(VOLUME, revealVol)
+                .hook(showPulseaudio, revealVol)
+                .hook(showPulseaudioFixed, revealVol),
+            Widget.Box({
+                visible: VOLUME.bind().as((v) => !v['source']['mute']),
+                children: [
+                    Widget.Label({
+                        label: config.volume.bluetooth,
+                        visible: VOLUME.bind().as((v) => v['source']['bluez']),
+                    }),
                     Widget.Label({ label: config.volume.mic }),
                 ],
-            }).bind(
-                // @ts-ignore
-                'visible',
-                VOLUME,
-                'value',
-                (v) => !v['source']['mute'],
-            ),
+            }),
         ],
     }),
 })
@@ -758,12 +641,14 @@ const NETWORK: Variable_t<null | number> = Variable(null, {
 const showNetwork = Variable(false);
 const showNetworkFixed = Variable(false);
 
-function revealNet() {
-    return showNetwork.value || showNetworkFixed.value;
+const shouldRevealNet = () => showNetwork.value || showNetworkFixed.value;
+
+function revealNet(obj) {
+    obj.reveal_child = shouldRevealNet();
 }
 
-function updateNetworkClasses(obj: Button<Gtk.Widget, unknown>) {
-    obj.toggleClassName('fixed-hover', revealNet());
+function updateNetworkClasses(obj) {
+    obj.toggleClassName('fixed-hover', shouldRevealNet());
 
     obj.toggleClassName('disabled', NETWORK.value === null);
 }
@@ -777,44 +662,28 @@ const Network = Widget.Button({
     child: Widget.Box({
         class_names: ['network'],
         children: [
-            Widget.Label().bind('label', NETWORK, 'value', (v) =>
-                v === null
-                    ? config.network.disabled
-                    : getIconFromArray(
-                          // @ts-ignore
-                          config.network.icons,
-                          v,
-                      ),
-            ),
+            Widget.Label({
+                label: NETWORK.bind().as((v) =>
+                    v === null
+                        ? config.network.disabled
+                        : getIconFromArray(
+                              // @ts-ignore
+                              config.network.icons,
+                              v,
+                          ),
+                ),
+            }),
             Widget.Revealer({
                 transition: 'slide_right',
                 transition_duration: 500,
                 class_names: ['revealer'],
+                visible: NETWORK.bind().as((v) => v !== null),
                 child: Widget.Label().bind('label', NETWORK, 'value', (v) =>
                     v !== null ? `${v}%` : '',
                 ),
             })
-                .bind(
-                    // @ts-ignore
-                    'reveal_child',
-                    showNetwork,
-                    'value',
-                    revealNet,
-                )
-                .bind(
-                    // @ts-ignore
-                    'reveal_child',
-                    showNetworkFixed,
-                    'value',
-                    revealNet,
-                )
-                .bind(
-                    // @ts-ignore
-                    'visible',
-                    NETWORK,
-                    'value',
-                    (v) => v !== null,
-                ),
+                .hook(showNetwork, revealNet)
+                .hook(showNetworkFixed, revealNet),
         ],
     }),
 })
@@ -829,12 +698,14 @@ const Network = Widget.Button({
 const showBattery = Variable(false);
 const showBatteryFixed = Variable(false);
 
-function revealBat() {
-    return showBattery.value || showBatteryFixed.value;
+const shouldRevealBat = () => showBattery.value || showBatteryFixed.value;
+
+function revealBat(obj) {
+    obj.reveal_child = shouldRevealBat();
 }
 
-function updateBatteryClasses(obj: Button<Gtk.Widget, unknown>) {
-    obj.toggleClassName('fixed-hover', revealBat());
+function updateBatteryClasses(obj) {
+    obj.toggleClassName('fixed-hover', shouldRevealBat());
 
     obj.toggleClassName(
         'urgent',
@@ -866,27 +737,14 @@ const Battery = Widget.Button({
                 transition: 'slide_right',
                 transition_duration: 500,
                 class_names: ['revealer'],
-                child: Widget.Label().bind(
-                    'label',
-                    battery,
-                    'percent',
-                    (v) => `${Math.round(v)}%`,
-                ),
+                child: Widget.Label({
+                    label: battery
+                        .bind('percent')
+                        .as((v) => `${Math.round(v)}%`),
+                }),
             })
-                .bind(
-                    // @ts-ignore
-                    'reveal_child',
-                    showBattery,
-                    'value',
-                    revealBat,
-                )
-                .bind(
-                    // @ts-ignore
-                    'reveal_child',
-                    showBatteryFixed,
-                    'value',
-                    revealBat,
-                ),
+                .hook(showBattery, revealBat)
+                .hook(showBatteryFixed, revealBat),
         ],
     }),
 })
