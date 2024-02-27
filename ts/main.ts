@@ -10,7 +10,6 @@ import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 import SystemTray from 'resource:///com/github/Aylur/ags/service/systemtray.js';
 import { Variable as Variable_t } from 'types/variable';
 import config from './config';
-import { InputDevice, TreeNode, XkbLayoutChange, mode_t } from './types/sway';
 import {
     getIconByPercentage as getIconFromArray,
     reloadCSS,
@@ -18,8 +17,8 @@ import {
     wrapMpstat,
 } from './helpers';
 import brightness from './service/brightness';
-import { Workspace, processWorkspaceEvent } from './sway';
 import { format } from 'date-fns';
+import Hyprland from 'resource:///com/github/Aylur/ags/service/hyprland.js';
 
 // CSS UPDATE
 
@@ -33,130 +32,75 @@ monitorFile(config.CSS.paths.scss, (_, event) => {
 // ..
 
 // WORKSPACES
-const swayWorkspaces: Variable_t<Workspace[]> = Variable(
-    JSON.parse(await execAsync('i3-msg -t get_workspaces -r')),
-    {
-        listen: [
-            `i3-msg -t subscribe '["workspace"]' -m -r`,
-            (out) => processWorkspaceEvent(swayWorkspaces.value, out),
-        ],
-    },
-);
 
-const Workspaces = Widget.Box({
-    class_names: ['workspaces'],
-    children: swayWorkspaces.bind().as((workspaces) =>
-        workspaces.map((workspace) =>
+Hyprland.connect('urgent-window', (_, windowaddress) => {
+    console.log(windowaddress);
+});
+
+const dispatch = (ws: string | number) =>
+    Hyprland.messageAsync(`dispatch workspace ${ws}`);
+
+// TODO urgent workspaces
+const Workspaces = () =>
+    Widget.Box({
+        class_names: ['workspaces'],
+        children: Array.from({ length: 12 }, (_, i) => i + 1).map((i) =>
             Widget.Button({
-                on_clicked: () =>
-                    execAsync(`swaymsg workspace ${workspace.name}`),
-                child: Widget.Label({
-                    label:
-                        config.workspaces.icons[workspace.name] ||
-                        config.workspaces.icons['default'],
-                }),
-                class_names: [
-                    'workspace',
-                    'widget',
-                    `${workspace.focused ? 'focused' : ''}`,
-                    `${workspace.visible ? 'visible' : ''}`,
-                    `${workspace.urgent ? 'urgent' : ''}`,
-                ],
+                on_clicked: () => dispatch(i),
+                attribute: i,
+                label:
+                    config.workspaces.icons[`${i}`] ||
+                    config.workspaces.icons['default'],
+                class_names: ['workspace', 'widget'],
             }),
         ),
-    ),
-});
 
-// ...
+        setup: (self) =>
+            self.hook(Hyprland, () =>
+                self.children.forEach((btn) => {
+                    btn.visible = Hyprland.workspaces.some(
+                        (ws) => ws.id === btn.attribute,
+                    );
 
-// SCRATCHPAD
-function getScratchWindowsCount(): number {
-    let tree: TreeNode = JSON.parse(exec('i3-msg -t get_tree -r'));
-
-    let nodes = tree.nodes?.filter((n) => n.name == '__i3')[0]?.nodes;
-    let floatingNodes = nodes?.filter((n) => n.name == '__i3_scratch')[0]
-        ?.floating_nodes;
-
-    return floatingNodes ? floatingNodes.length : 0;
-}
-
-const swayScratchpad = Variable(getScratchWindowsCount(), {
-    listen: [`i3-msg -t subscribe '["window"]' -m -r`, getScratchWindowsCount],
-});
-
-const showScratchpad = Variable(false);
-const showScratchpadFixed = Variable(false);
-
-const shouldRevealScratchpad = () =>
-    showScratchpad.value ||
-    showScratchpadFixed.value ||
-    swayScratchpad.value > 0;
-
-function revealScratchpad(obj) {
-    obj.reveal_child = shouldRevealScratchpad();
-}
-
-function updateScratchpadClasses(obj) {
-    obj.toggleClassName('fixed-hover', shouldRevealScratchpad());
-}
-
-const Scratchpad = Widget.Button({
-    on_primary_click: () => execAsync('swaymsg scratchpad show'),
-    on_secondary_click: () => execAsync('swaymsg move scratchpad'),
-    class_names: ['widget'],
-    child: Widget.Box({
-        class_names: ['scratchpad'],
-        children: [
-            Widget.Label({ label: config.scratchpad.icon }),
-            Widget.Revealer({
-                class_names: ['revealer'],
-                transition: 'slide_right',
-                transition_duration: 500,
-                child: Widget.Label({
-                    label: swayScratchpad.bind().as((v) => `${v}`),
+                    btn.toggleClassName(
+                        'focused',
+                        Hyprland.workspaces.some(
+                            (ws) =>
+                                ws.id === Hyprland.active.workspace.id &&
+                                ws.id === btn.attribute,
+                        ),
+                    );
                 }),
-            })
-                .hook(showScratchpad, revealScratchpad)
-                .hook(showScratchpadFixed, revealScratchpad)
-                .hook(swayScratchpad, revealScratchpad),
-        ],
-    }),
-})
-    .hook(swayScratchpad, updateScratchpadClasses)
-    .hook(showScratchpad, updateScratchpadClasses)
-    .hook(showScratchpadFixed, updateScratchpadClasses);
+            ),
+    });
 
 // ...
 
 // MODE
 
-const swayMode: Variable_t<mode_t> = Variable(
-    JSON.parse(await execAsync('i3-msg -t get_binding_state -r')),
-    {
-        listen: [
-            `i3-msg -t subscribe "['mode']" -m -r`,
-            (out) => ({ name: JSON.parse(out).change }),
-        ],
-    },
-);
-
-const Mode = Widget.Revealer({
-    transition_duration: 500,
-    transition: 'slide_right',
-    revealChild: swayMode.bind().as((v) => v.name !== 'default'),
-    child: Widget.Button({
-        on_clicked: () => execAsync('swaymsg mode default'),
-        child: Widget.Label().hook(swayMode, (self) => {
-            const mode = swayMode.value.name;
-            if (mode !== 'default') self.label = mode;
-        }),
-        class_names: ['widget', 'mode'],
-    }).hook(swayMode, (self) => {
-        const oldMode = self.class_names.find((m) => m.startsWith('mode_'));
-        self.toggleClassName(`mode_${swayMode.value.name}`, true);
-        if (oldMode) self.toggleClassName(oldMode, false);
-    }),
+Hyprland.connect('submap', (_, name: string) => {
+    mode.value = name;
 });
+
+const mode = Variable('');
+
+const Mode = () =>
+    Widget.Revealer({
+        transition_duration: 500,
+        transition: 'slide_right',
+        revealChild: mode.bind().as((v) => v !== ''),
+        child: Widget.Button({
+            on_clicked: () => execAsync('hyprctl dispatch submap reset'),
+            child: Widget.Label().hook(mode, (self) => {
+                if (mode.value !== '') self.label = mode.value;
+            }),
+            class_names: ['widget', 'mode'],
+        }).hook(mode, (self) => {
+            const oldMode = self.class_names.find((m) => m.startsWith('mode_'));
+            self.toggleClassName(`mode_${mode.value}`, true);
+            if (oldMode) self.toggleClassName(oldMode, false);
+        }),
+    });
 
 // ...
 
@@ -199,44 +143,28 @@ const SysTray = Widget.Box({
 
 // LANGUAGE
 
-function getActiveLayoutName(): string {
-    const inputs: InputDevice[] = JSON.parse(exec('swaymsg -t get_inputs -r'));
-    const layout = inputs.filter(
-        (i) => i.type === 'keyboard' && i.xkb_layout_names,
-    )[0]?.xkb_active_layout_name;
-    return layout || '';
-}
+const getActiveLayoutName = () =>
+    JSON.parse(exec('hyprctl devices -j')).keyboards.find((kb) => kb.main)
+        .active_keymap;
 
-const inputEvent: Variable_t<XkbLayoutChange> = Variable(
-    {},
-    {
-        listen: [
-            `i3-msg -t subscribe '["input"]' -m -r`,
-            (out) => JSON.parse(out),
-        ],
-    },
-);
-
-inputEvent.connect('changed', ({ value }) => {
-    if (value.change === 'xkb_layout') {
-        const currentLayout = value.input.xkb_active_layout_name;
-        if (currentLayout !== lang.value) {
-            lang.value = currentLayout;
-        }
-    }
+Hyprland.connect('keyboard-layout', (_, __, layoutname: string) => {
+    lang.value = layoutname;
 });
 
 const lang = Variable(getActiveLayoutName());
 
-const Language = Widget.Button({
-    on_clicked: () =>
-        execAsync('swaymsg input type:keyboard xkb_switch_layout next'),
-    class_names: ['widget'],
-    child: Widget.Label({
-        label: lang.bind().as((v) => config.language.icons[v] || v),
-        tooltip_text: lang.bind(),
-    }),
-});
+const Language = () =>
+    Widget.Button({
+        on_clicked: () =>
+            execAsync(
+                'hyprctl switchxkblayout at-translated-set-2-keyboard next',
+            ),
+        class_names: ['widget'],
+        child: Widget.Label({
+            label: lang.bind().as((v) => config.language.icons[v] || v),
+            tooltip_text: lang.bind(),
+        }),
+    });
 
 // ...
 
@@ -756,7 +684,11 @@ const Battery = Widget.Button({
 
 const Left = Widget.Box({
     class_names: ['modules-left'],
-    children: [Workspaces, Scratchpad, Mode],
+    children: [
+        Workspaces(),
+        // Scratchpad,
+        Mode(),
+    ],
 });
 
 const Center = Widget.Box({
@@ -771,7 +703,7 @@ const Right = Widget.Box({
         SysTray,
         // TODO runcat
         // TODO touchpad
-        Language,
+        Language(),
         Temperature,
         Memory,
         CPU,
@@ -793,7 +725,7 @@ const Bar = (monitor: number = 0) =>
         anchor: ['top', 'left', 'right'],
         exclusivity: 'exclusive',
         // focusable: true,  // if need to interact somehow
-        layer: 'bottom', // "top" by default
+        layer: 'top', // "top" by default
         // margins: [8, 6],  // just like in CSS
         monitor: monitor,
         // popup: true,  // requires `focusable` I think
