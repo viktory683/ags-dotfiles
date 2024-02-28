@@ -125,16 +125,6 @@ window.bar > * > * > *,
     color: lighten($foreground, 12%);
 }
 
-.disabled {
-    background-color: lighten($surface, 9%);
-    color: $disabled;
-
-    &:hover {
-        background-color: lighten($surface, 12%);
-        color: lighten($disabled, 12%);
-    }
-}
-
 .urgent {
     background-color: $error;
     color: $surface;
@@ -142,6 +132,16 @@ window.bar > * > * > *,
     &:hover {
         background-color: lighten($error, 12%);
         color: lighten($surface, 12%);
+    }
+}
+
+.disabled {
+    background-color: lighten($surface, 9%);
+    color: $disabled;
+
+    &:hover {
+        background-color: lighten($surface, 12%);
+        color: lighten($disabled, 12%);
     }
 }
 

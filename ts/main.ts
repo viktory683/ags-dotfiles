@@ -19,6 +19,8 @@ import {
 import brightness from './service/brightness';
 import { format } from 'date-fns';
 import Hyprland from 'resource:///com/github/Aylur/ags/service/hyprland.js';
+import Gdk from 'types/@girs/gdk-3.0/gdk-3.0';
+import DeviceConfiguration from './types/hyprland';
 
 // CSS UPDATE
 
@@ -90,15 +92,16 @@ const Mode = () =>
         transition: 'slide_right',
         revealChild: mode.bind().as((v) => v !== ''),
         child: Widget.Button({
-            on_clicked: () => execAsync('hyprctl dispatch submap reset'),
-            child: Widget.Label().hook(mode, (self) => {
-                if (mode.value !== '') self.label = mode.value;
-            }),
+            on_clicked: () => Hyprland.messageAsync('dispatch submap reset'),
+            label: '',
             class_names: ['widget', 'mode'],
         }).hook(mode, (self) => {
             const oldMode = self.class_names.find((m) => m.startsWith('mode_'));
             self.toggleClassName(`mode_${mode.value}`, true);
             if (oldMode) self.toggleClassName(oldMode, false);
+
+            // @ts-ignore
+            if (mode.value !== '') self.label = mode.value;
         }),
     });
 
@@ -114,38 +117,41 @@ const date = Variable('', {
     poll: [1000, () => format(new Date(), config.clock.date)],
 });
 
-const Clock = Widget.Label({
-    class_names: ['clock', 'widget'],
-    label: time.bind(),
-    tooltip_text: date.bind(),
-});
+const Clock = () =>
+    Widget.Label({
+        class_names: ['clock', 'widget'],
+        label: time.bind(),
+        tooltip_text: date.bind(),
+    });
 
 // ...
 
 // TRAY
 
-const SysTray = Widget.Box({
-    class_names: ['widget', 'tray'],
-}).hook(SystemTray, (self) => {
-    self.children = SystemTray.items
-        .sort((a, b) => (a.title > b.title ? -1 : 1))
-        .map((item) =>
-            Widget.Button({
-                child: Widget.Icon().bind('icon', item, 'icon'),
-                on_primary_click: (_, e) => item.activate(e),
-                on_secondary_click: (_, e) => item.openMenu(e),
-                tooltip_text: item.bind('tooltip_markup'),
-            }),
-        );
-});
+const SysTray = () =>
+    Widget.Box({
+        class_names: ['widget', 'tray'],
+    }).hook(SystemTray, (self) => {
+        self.children = SystemTray.items
+            .sort((a, b) => (a.title > b.title ? -1 : 1))
+            .map((item) =>
+                Widget.Button({
+                    child: Widget.Icon().bind('icon', item, 'icon'),
+                    on_primary_click: (_, e: Gdk.Event) => item.activate(e),
+                    on_secondary_click: (_, e: Gdk.Event) => item.openMenu(e),
+                    tooltip_text: item.bind('tooltip_markup'),
+                }),
+            );
+    });
 
 // ...
 
 // LANGUAGE
 
-const getActiveLayoutName = () =>
-    JSON.parse(exec('hyprctl devices -j')).keyboards.find((kb) => kb.main)
-        .active_keymap;
+const getActiveLayoutName = () => {
+    let data: DeviceConfiguration = JSON.parse(exec('hyprctl devices -j'));
+    return data.keyboards.find((kb) => kb.main)?.active_keymap;
+};
 
 Hyprland.connect('keyboard-layout', (_, __, layoutname: string) => {
     lang.value = layoutname;
@@ -156,14 +162,12 @@ const lang = Variable(getActiveLayoutName());
 const Language = () =>
     Widget.Button({
         on_clicked: () =>
-            execAsync(
-                'hyprctl switchxkblayout at-translated-set-2-keyboard next',
+            Hyprland.messageAsync(
+                'switchxkblayout at-translated-set-2-keyboard next',
             ),
         class_names: ['widget'],
-        child: Widget.Label({
-            label: lang.bind().as((v) => config.language.icons[v] || v),
-            tooltip_text: lang.bind(),
-        }),
+        label: lang.bind().as((v) => v && (config.language.icons[v] || v)),
+        tooltip_text: lang.bind(),
     });
 
 // ...
@@ -193,42 +197,43 @@ function updateTempClasses(obj) {
     obj.toggleClassName('urgent', TEMPERATURE.value > config.temperature.max);
 }
 
-const Temperature = Widget.Button({
-    on_hover: () => (showTemperature.value = true),
-    on_hover_lost: () => (showTemperature.value = false),
-    on_middle_click: () =>
-        (showTemperatureFixed.value = !showTemperatureFixed.value),
-    class_names: ['widget'],
-    child: Widget.Box({
-        class_names: ['temp'],
-        children: [
-            Widget.Label({
-                label: TEMPERATURE.bind().as((v) =>
-                    getIconFromArray(
-                        // @ts-ignore
-                        config.temperature.icons,
-                        v,
-                        config.temperature.min,
-                        config.temperature.max,
+const Temperature = () =>
+    Widget.Button({
+        on_hover: () => (showTemperature.value = true),
+        on_hover_lost: () => (showTemperature.value = false),
+        on_middle_click: () =>
+            (showTemperatureFixed.value = !showTemperatureFixed.value),
+        class_names: ['widget'],
+        child: Widget.Box({
+            class_names: ['temp'],
+            children: [
+                Widget.Label({
+                    label: TEMPERATURE.bind().as((v) =>
+                        getIconFromArray(
+                            // @ts-ignore
+                            config.temperature.icons,
+                            v,
+                            config.temperature.min,
+                            config.temperature.max,
+                        ),
                     ),
-                ),
-            }),
-            Widget.Revealer({
-                transition_duration: 500,
-                transition: 'slide_right',
-                class_names: ['revealer', 'right'],
-                child: Widget.Label({
-                    label: TEMPERATURE.bind().as((v) => `${v}º`),
                 }),
-            })
-                .hook(showTemperature, revealTemp)
-                .hook(showTemperatureFixed, revealTemp),
-        ],
-    }),
-})
-    .hook(showTemperature, updateTempClasses)
-    .hook(showTemperatureFixed, updateTempClasses)
-    .hook(TEMPERATURE, updateTempClasses);
+                Widget.Revealer({
+                    transition_duration: 500,
+                    transition: 'slide_right',
+                    class_names: ['revealer', 'right'],
+                    child: Widget.Label({
+                        label: TEMPERATURE.bind().as((v) => `${v}º`),
+                    }),
+                })
+                    .hook(showTemperature, revealTemp)
+                    .hook(showTemperatureFixed, revealTemp),
+            ],
+        }),
+    })
+        .hook(showTemperature, updateTempClasses)
+        .hook(showTemperatureFixed, updateTempClasses)
+        .hook(TEMPERATURE, updateTempClasses);
 
 // ...
 
@@ -286,34 +291,35 @@ function createMemoryProgressBar(type: string) {
     });
 }
 
-const Memory = Widget.Button({
-    on_hover: () => (showMemory.value = true),
-    on_hover_lost: () => (showMemory.value = false),
-    on_middle_click: () => (showMemoryFixed.value = !showMemoryFixed.value),
-    class_names: ['widget'],
-    child: Widget.Box({
-        class_names: ['memory'],
-        children: [
-            Widget.Label({ label: config.memory.icon }),
-            Widget.Revealer({
-                transition: 'slide_right',
-                transition_duration: 500,
-                class_names: ['revealer'],
-                child: Widget.Box({
-                    children: [
-                        createMemoryProgressBar('Mem'),
-                        createMemoryProgressBar('Swap'),
-                    ],
-                }),
-            })
-                .hook(showMemory, revealMem)
-                .hook(showMemoryFixed, revealMem),
-        ],
-    }),
-})
-    .hook(showMemory, updateMemoryClasses)
-    .hook(showMemoryFixed, updateMemoryClasses)
-    .hook(MEMORY, updateMemoryClasses);
+const Memory = () =>
+    Widget.Button({
+        on_hover: () => (showMemory.value = true),
+        on_hover_lost: () => (showMemory.value = false),
+        on_middle_click: () => (showMemoryFixed.value = !showMemoryFixed.value),
+        class_names: ['widget'],
+        child: Widget.Box({
+            class_names: ['memory'],
+            children: [
+                Widget.Label({ label: config.memory.icon }),
+                Widget.Revealer({
+                    transition: 'slide_right',
+                    transition_duration: 500,
+                    class_names: ['revealer'],
+                    child: Widget.Box({
+                        children: [
+                            createMemoryProgressBar('Mem'),
+                            createMemoryProgressBar('Swap'),
+                        ],
+                    }),
+                })
+                    .hook(showMemory, revealMem)
+                    .hook(showMemoryFixed, revealMem),
+            ],
+        }),
+    })
+        .hook(showMemory, updateMemoryClasses)
+        .hook(showMemoryFixed, updateMemoryClasses)
+        .hook(MEMORY, updateMemoryClasses);
 
 // ...
 
@@ -345,47 +351,50 @@ function updateCPUClasses(obj) {
     );
 }
 
-const CPU = Widget.Button({
-    on_hover: () => (showCpuCores.value = true),
-    on_hover_lost: () => (showCpuCores.value = false),
-    on_middle_click: () => (showCpuCoresFixed.value = !showCpuCoresFixed.value),
-    on_clicked: () => term('btop'),
-    class_names: ['widget'],
-    child: Widget.Box({
-        class_names: ['cpu'],
-        children: [
-            Widget.Label({ label: config.cpu.icon }),
-            Widget.Revealer({
-                class_names: ['revealer'],
-                transition: 'slide_right',
-                transition_duration: 500,
-                child: Widget.Box({
-                    children: cpu.value.cores.map((core) =>
-                        Widget.ProgressBar({
-                            vertical: true,
-                            inverted: true,
-                            class_names: ['progress', 'vertical'],
-                            value: cpu
-                                .bind()
-                                .as(
-                                    (cpuStat) =>
-                                        (100 -
-                                            cpuStat.cores[parseInt(core.cpu)]
-                                                .percent_idle) /
-                                        100,
-                                ),
-                        }),
-                    ),
-                }),
-            })
-                .hook(showCpuCores, revealCPU)
-                .hook(showCpuCoresFixed, revealCPU),
-        ],
-    }),
-})
-    .hook(showCpuCores, updateCPUClasses)
-    .hook(showCpuCoresFixed, updateCPUClasses)
-    .hook(cpu, updateCPUClasses);
+const CPU = () =>
+    Widget.Button({
+        on_hover: () => (showCpuCores.value = true),
+        on_hover_lost: () => (showCpuCores.value = false),
+        on_middle_click: () =>
+            (showCpuCoresFixed.value = !showCpuCoresFixed.value),
+        on_clicked: () => term('btop'),
+        class_names: ['widget'],
+        child: Widget.Box({
+            class_names: ['cpu'],
+            children: [
+                Widget.Label({ label: config.cpu.icon }),
+                Widget.Revealer({
+                    class_names: ['revealer'],
+                    transition: 'slide_right',
+                    transition_duration: 500,
+                    child: Widget.Box({
+                        children: cpu.value.cores.map((core) =>
+                            Widget.ProgressBar({
+                                vertical: true,
+                                inverted: true,
+                                class_names: ['progress', 'vertical'],
+                                value: cpu
+                                    .bind()
+                                    .as(
+                                        (cpuStat) =>
+                                            (100 -
+                                                cpuStat.cores[
+                                                    parseInt(core.cpu)
+                                                ].percent_idle) /
+                                            100,
+                                    ),
+                            }),
+                        ),
+                    }),
+                })
+                    .hook(showCpuCores, revealCPU)
+                    .hook(showCpuCoresFixed, revealCPU),
+            ],
+        }),
+    })
+        .hook(showCpuCores, updateCPUClasses)
+        .hook(showCpuCoresFixed, updateCPUClasses)
+        .hook(cpu, updateCPUClasses);
 
 // ...
 
@@ -405,36 +414,37 @@ function updateBrightnessClasses(obj) {
     obj.toggleClassName('fixed-hover', shouldRevealBrightness());
 }
 
-const Brightness = Widget.Button({
-    on_hover: () => (showBrightness.value = true),
-    on_hover_lost: () => (showBrightness.value = false),
-    on_middle_click: () =>
-        (showBrightnessFixed.value = !showBrightnessFixed.value),
-    on_scroll_up: () => execAsync('brightnessctl -e s 1-%'),
-    on_scroll_down: () => execAsync('brightnessctl -e s 1+%'),
-    visible: brightness.bind('screen_value').as((v) => v < 1),
-    child: Widget.Box({
-        class_names: ['brightness'],
-        children: [
-            Widget.Label({ label: config.brightness.icon }),
-            Widget.Revealer({
-                transition: 'slide_right',
-                transition_duration: 500,
-                class_names: ['revealer'],
-                child: Widget.ProgressBar({
-                    vertical: true,
-                    inverted: true,
-                    class_names: ['progress', 'vertical'],
-                    value: brightness.bind('screen_value'),
-                }),
-            })
-                .hook(showBrightness, RevealBrightness)
-                .hook(showBrightnessFixed, RevealBrightness),
-        ],
-    }),
-})
-    .hook(showBrightness, updateBrightnessClasses)
-    .hook(showBrightnessFixed, updateBrightnessClasses);
+const Brightness = () =>
+    Widget.Button({
+        on_hover: () => (showBrightness.value = true),
+        on_hover_lost: () => (showBrightness.value = false),
+        on_middle_click: () =>
+            (showBrightnessFixed.value = !showBrightnessFixed.value),
+        on_scroll_up: () => execAsync('brightnessctl -e s 1-%'),
+        on_scroll_down: () => execAsync('brightnessctl -e s 1+%'),
+        visible: brightness.bind('screen_value').as((v) => v < 1),
+        child: Widget.Box({
+            class_names: ['brightness'],
+            children: [
+                Widget.Label({ label: config.brightness.icon }),
+                Widget.Revealer({
+                    transition: 'slide_right',
+                    transition_duration: 500,
+                    class_names: ['revealer'],
+                    child: Widget.ProgressBar({
+                        vertical: true,
+                        inverted: true,
+                        class_names: ['progress', 'vertical'],
+                        value: brightness.bind('screen_value'),
+                    }),
+                })
+                    .hook(showBrightness, RevealBrightness)
+                    .hook(showBrightnessFixed, RevealBrightness),
+            ],
+        }),
+    })
+        .hook(showBrightness, updateBrightnessClasses)
+        .hook(showBrightnessFixed, updateBrightnessClasses);
 
 // ...
 
@@ -482,70 +492,74 @@ function updateVolumeClasses(obj) {
     obj.toggleClassName('disabled', VOLUME.value.sink.mute);
 }
 
-const Volume = Widget.Button({
-    on_clicked: () => execAsync('pactl set-sink-mute @DEFAULT_SINK@ toggle'),
-    on_middle_click: () =>
-        (showPulseaudioFixed.value = !showPulseaudioFixed.value),
-    on_hover: () => (showPulseaudio.value = true),
-    on_hover_lost: () => (showPulseaudio.value = false),
-    class_names: ['widget'],
-    child: Widget.Box({
-        spacing: 2,
-        class_names: ['pulseaudio'],
-        children: [
-            Widget.Label({
-                label: config.volume.bluetooth,
-                visible: VOLUME.bind().as((v) => v['sink']['bluez']),
-            }),
-            Widget.Label({
-                label: VOLUME.bind().as((v) => {
-                    if (v['sink']['mute']) {
-                        return config.volume.muted;
-                    }
+const Volume = () =>
+    Widget.Button({
+        on_clicked: () =>
+            execAsync('pactl set-sink-mute @DEFAULT_SINK@ toggle'),
+        on_middle_click: () =>
+            (showPulseaudioFixed.value = !showPulseaudioFixed.value),
+        on_hover: () => (showPulseaudio.value = true),
+        on_hover_lost: () => (showPulseaudio.value = false),
+        class_names: ['widget'],
+        child: Widget.Box({
+            spacing: 2,
+            class_names: ['pulseaudio'],
+            children: [
+                Widget.Label({
+                    label: config.volume.bluetooth,
+                    visible: VOLUME.bind().as((v) => v['sink']['bluez']),
+                }),
+                Widget.Label({
+                    label: VOLUME.bind().as((v) => {
+                        if (v['sink']['mute']) {
+                            return config.volume.muted;
+                        }
 
-                    const vol = Math.round(v['sink']['volume']);
-                    if (vol === 0) {
-                        return config.volume.silent;
-                    }
-                    if (vol > 100) {
-                        return config.volume.alert;
-                    }
-                    return getIconFromArray(
-                        // @ts-ignore
-                        config.volume.icons,
-                        vol,
-                    );
-                }),
-            }),
-            Widget.Revealer({
-                reveal_child: false,
-                transition: 'slide_right',
-                class_names: ['revealer'],
-                child: Widget.Label({
-                    label: VOLUME.bind().as(
-                        (v) => `${Math.round(v['sink']['volume'])}%`,
-                    ),
-                }),
-            })
-                .hook(VOLUME, revealVol)
-                .hook(showPulseaudio, revealVol)
-                .hook(showPulseaudioFixed, revealVol),
-            Widget.Box({
-                visible: VOLUME.bind().as((v) => !v['source']['mute']),
-                children: [
-                    Widget.Label({
-                        label: config.volume.bluetooth,
-                        visible: VOLUME.bind().as((v) => v['source']['bluez']),
+                        const vol = Math.round(v['sink']['volume']);
+                        if (vol === 0) {
+                            return config.volume.silent;
+                        }
+                        if (vol > 100) {
+                            return config.volume.alert;
+                        }
+                        return getIconFromArray(
+                            // @ts-ignore
+                            config.volume.icons,
+                            vol,
+                        );
                     }),
-                    Widget.Label({ label: config.volume.mic }),
-                ],
-            }),
-        ],
-    }),
-})
-    .hook(showPulseaudio, updateVolumeClasses)
-    .hook(showPulseaudioFixed, updateVolumeClasses)
-    .hook(VOLUME, updateVolumeClasses);
+                }),
+                Widget.Revealer({
+                    reveal_child: false,
+                    transition: 'slide_right',
+                    class_names: ['revealer'],
+                    child: Widget.Label({
+                        label: VOLUME.bind().as(
+                            (v) => `${Math.round(v['sink']['volume'])}%`,
+                        ),
+                    }),
+                })
+                    .hook(VOLUME, revealVol)
+                    .hook(showPulseaudio, revealVol)
+                    .hook(showPulseaudioFixed, revealVol),
+                Widget.Box({
+                    visible: VOLUME.bind().as((v) => !v['source']['mute']),
+                    children: [
+                        Widget.Label({
+                            label: config.volume.bluetooth,
+                            visible: VOLUME.bind().as(
+                                (v) => v['source']['bluez'],
+                            ),
+                        }),
+                        Widget.Label({ label: config.volume.mic }),
+                    ],
+                }),
+            ],
+        }),
+    })
+        .hook(showPulseaudio, updateVolumeClasses)
+        .hook(showPulseaudioFixed, updateVolumeClasses)
+        .hook(VOLUME, updateVolumeClasses);
 
 // ...
 
@@ -581,43 +595,45 @@ function updateNetworkClasses(obj) {
     obj.toggleClassName('disabled', NETWORK.value === null);
 }
 
-const Network = Widget.Button({
-    on_secondary_click: () => term('bluetuith'),
-    on_middle_click: () => (showNetworkFixed.value = !showNetworkFixed.value),
-    on_hover: () => (showNetwork.value = true),
-    on_hover_lost: () => (showNetwork.value = false),
-    class_names: ['widget'],
-    child: Widget.Box({
-        class_names: ['network'],
-        children: [
-            Widget.Label({
-                label: NETWORK.bind().as((v) =>
-                    v === null
-                        ? config.network.disabled
-                        : getIconFromArray(
-                              // @ts-ignore
-                              config.network.icons,
-                              v,
-                          ),
-                ),
-            }),
-            Widget.Revealer({
-                transition: 'slide_right',
-                transition_duration: 500,
-                class_names: ['revealer'],
-                visible: NETWORK.bind().as((v) => v !== null),
-                child: Widget.Label().bind('label', NETWORK, 'value', (v) =>
-                    v !== null ? `${v}%` : '',
-                ),
-            })
-                .hook(showNetwork, revealNet)
-                .hook(showNetworkFixed, revealNet),
-        ],
-    }),
-})
-    .hook(showNetwork, updateNetworkClasses)
-    .hook(showNetworkFixed, updateNetworkClasses)
-    .hook(NETWORK, updateNetworkClasses);
+const Network = () =>
+    Widget.Button({
+        on_secondary_click: () => term('bluetuith'),
+        on_middle_click: () =>
+            (showNetworkFixed.value = !showNetworkFixed.value),
+        on_hover: () => (showNetwork.value = true),
+        on_hover_lost: () => (showNetwork.value = false),
+        class_names: ['widget'],
+        child: Widget.Box({
+            class_names: ['network'],
+            children: [
+                Widget.Label({
+                    label: NETWORK.bind().as((v) =>
+                        v === null
+                            ? config.network.disabled
+                            : getIconFromArray(
+                                  // @ts-ignore
+                                  config.network.icons,
+                                  v,
+                              ),
+                    ),
+                }),
+                Widget.Revealer({
+                    transition: 'slide_right',
+                    transition_duration: 500,
+                    class_names: ['revealer'],
+                    visible: NETWORK.bind().as((v) => v !== null),
+                    child: Widget.Label().bind('label', NETWORK, 'value', (v) =>
+                        v !== null ? `${v}%` : '',
+                    ),
+                })
+                    .hook(showNetwork, revealNet)
+                    .hook(showNetworkFixed, revealNet),
+            ],
+        }),
+    })
+        .hook(showNetwork, updateNetworkClasses)
+        .hook(showNetworkFixed, updateNetworkClasses)
+        .hook(NETWORK, updateNetworkClasses);
 
 // ...
 
@@ -641,44 +657,46 @@ function updateBatteryClasses(obj) {
     );
 }
 
-const Battery = Widget.Button({
-    on_hover: () => (showBattery.value = true),
-    on_hover_lost: () => (showBattery.value = false),
-    on_middle_click: () => (showBatteryFixed.value = !showBatteryFixed.value),
-    class_names: ['widget'],
-    child: Widget.Box({
-        class_names: ['battery'],
-        children: [
-            Widget.Label().hook(battery, (self) => {
-                if (battery.charging) {
-                    self.label = config.battery.charging;
-                    return;
-                }
+const Battery = () =>
+    Widget.Button({
+        on_hover: () => (showBattery.value = true),
+        on_hover_lost: () => (showBattery.value = false),
+        on_middle_click: () =>
+            (showBatteryFixed.value = !showBatteryFixed.value),
+        class_names: ['widget'],
+        child: Widget.Box({
+            class_names: ['battery'],
+            children: [
+                Widget.Label().hook(battery, (self) => {
+                    if (battery.charging) {
+                        self.label = config.battery.charging;
+                        return;
+                    }
 
-                self.label = getIconFromArray(
-                    // @ts-ignore
-                    config.battery.icons,
-                    battery.percent,
-                );
-            }),
-            Widget.Revealer({
-                transition: 'slide_right',
-                transition_duration: 500,
-                class_names: ['revealer'],
-                child: Widget.Label({
-                    label: battery
-                        .bind('percent')
-                        .as((v) => `${Math.round(v)}%`),
+                    self.label = getIconFromArray(
+                        // @ts-ignore
+                        config.battery.icons,
+                        battery.percent,
+                    );
                 }),
-            })
-                .hook(showBattery, revealBat)
-                .hook(showBatteryFixed, revealBat),
-        ],
-    }),
-})
-    .hook(showBattery, updateBatteryClasses)
-    .hook(showBatteryFixed, updateBatteryClasses)
-    .hook(battery, updateBatteryClasses);
+                Widget.Revealer({
+                    transition: 'slide_right',
+                    transition_duration: 500,
+                    class_names: ['revealer'],
+                    child: Widget.Label({
+                        label: battery
+                            .bind('percent')
+                            .as((v) => `${Math.round(v)}%`),
+                    }),
+                })
+                    .hook(showBattery, revealBat)
+                    .hook(showBatteryFixed, revealBat),
+            ],
+        }),
+    })
+        .hook(showBattery, updateBatteryClasses)
+        .hook(showBatteryFixed, updateBatteryClasses)
+        .hook(battery, updateBatteryClasses);
 
 // ...
 
@@ -693,24 +711,24 @@ const Left = Widget.Box({
 
 const Center = Widget.Box({
     class_names: ['modules-center'],
-    children: [Clock],
+    children: [Clock()],
 });
 
 const Right = Widget.Box({
     class_names: ['modules-right'],
     hpack: 'end',
     children: [
-        SysTray,
+        SysTray(),
         // TODO runcat
         // TODO touchpad
         Language(),
-        Temperature,
-        Memory,
-        CPU,
-        Brightness,
-        Volume,
-        Network,
-        Battery,
+        Temperature(),
+        Memory(),
+        CPU(),
+        Brightness(),
+        Volume(),
+        Network(),
+        Battery(),
     ],
 });
 
