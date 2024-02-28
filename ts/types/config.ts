@@ -64,7 +64,7 @@ export const Config = t.type({
         icons: t.record(t.string, t.string),
     }),
 
-    CSS: t.type({
+    style: t.type({
         paths: t.type({
             scss: t.string,
             css: t.string,

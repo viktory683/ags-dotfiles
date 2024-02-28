@@ -1,7 +1,7 @@
 import App from 'resource:///com/github/Aylur/ags/app.js'
 import { execAsync } from 'resource:///com/github/Aylur/ags/utils.js'
 
-const entry = `${App.configDir}/ts/main.ts`
+const entry = `${App.configDir}/main.ts`
 const outdir = `${App.configDir}/build`
 
 try {

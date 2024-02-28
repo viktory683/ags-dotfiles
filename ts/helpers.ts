@@ -1,19 +1,5 @@
 import { execAsync } from 'resource:///com/github/Aylur/ags/utils.js';
-import config from './config';
-import App from 'resource:///com/github/Aylur/ags/app.js';
-
-/**
- * Reloads the CSS by compiling SCSS to CSS.
- */
-export function reloadCSS() {
-    execAsync(`sassc ${config.CSS.paths.scss} ${config.CSS.paths.css}`)
-        .then(() => {
-            App.resetCss();
-            App.applyCss(config.CSS.paths.css);
-            if (config.log.level == 'debug') console.log('CSS UPDATED');
-        })
-        .catch((err) => console.error(err));
-}
+import config from 'ts/config';
 
 /**
  * Maps a value from one range to another.
@@ -43,7 +29,7 @@ function map(
  * @param {number} [max=100] - The maximum percentage value.
  * @returns {T} - The selected icon from the array.
  */
-export function getIconByPercentage<T>(
+export function getIconFromArray<T>(
     icons: T[],
     value: number,
     min: number = 0,

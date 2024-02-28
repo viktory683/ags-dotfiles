@@ -15,7 +15,7 @@
             "./types/ags.d.ts",
             "./node_modules/@types"
         ],
-        "skipLibCheck": false,
+        "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
         "moduleResolution": "node",
     },

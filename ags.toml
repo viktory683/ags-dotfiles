@@ -63,8 +63,8 @@ icon = ""
 'English (US)' = '🇺🇸'
 'Russian' = '🇷🇺'
 
-[CSS.paths]
-scss = "/scss/style.scss"
+[style.paths]
+scss = "/style/style.scss"
 css = "/style.css"
 
 [clock]

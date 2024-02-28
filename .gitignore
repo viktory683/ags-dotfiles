@@ -95,3 +95,4 @@ style.css
 /eww
 .vscode/settings.json
 /build
+package-lock.json
