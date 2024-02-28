@@ -1,9 +1,14 @@
+![bar](attachments/bar.png)
 ### Info
 
-version: `0.1.2`
+version: `0.1.3`
 
 просто осталю это здесь, чтобы не потерять
 [доки](https://aylur.github.io/ags-docs)
+
+(бар наверху ридми это как раз то, как выглядит текущая конифгурация (на момент 04:50 PM 28/02/2024))
+
+![desktop](attachments/desktop.png)
 
 ### референсы
 
