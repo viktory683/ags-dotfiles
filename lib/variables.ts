@@ -3,7 +3,7 @@ import { exec, readFile } from 'resource:///com/github/Aylur/ags/utils.js';
 import Variable from 'resource:///com/github/Aylur/ags/variable.js';
 import { Variable as Variable_t } from 'types/variable';
 import configs from 'ts/config';
-import { wrapMpstat } from 'ts/helpers';
+import { wrapMpstat } from 'lib/utils';
 
 export const mode = Variable('');
 

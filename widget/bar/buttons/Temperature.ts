@@ -5,7 +5,7 @@ import {
 } from 'lib/variables';
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 import configs from 'ts/config';
-import { getIconFromArray } from 'ts/helpers';
+import { getIconFromArray } from 'lib/utils';
 
 const shouldRevealTemp = () =>
     showTemperature.value || showTemperatureFixed.value;

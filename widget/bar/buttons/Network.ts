@@ -1,5 +1,5 @@
 import configs from 'ts/config';
-import { getIconFromArray, term } from 'ts/helpers';
+import { getIconFromArray, term } from 'lib/utils';
 import { NETWORK, showNetwork, showNetworkFixed } from 'lib/variables';
 
 const shouldRevealNet = () => showNetwork.value || showNetworkFixed.value;

@@ -1,4 +1,4 @@
-import { term } from 'ts/helpers';
+import { term } from 'lib/utils';
 import configs from 'ts/config';
 import { cpu, showCpuCores, showCpuCoresFixed } from 'lib/variables';
 

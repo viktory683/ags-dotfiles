@@ -1,6 +1,6 @@
 import { showBattery, showBatteryFixed } from 'lib/variables';
 import battery from 'resource:///com/github/Aylur/ags/service/battery.js';
-import { getIconFromArray } from 'ts/helpers';
+import { getIconFromArray } from 'lib/utils';
 import configs from 'ts/config';
 
 const shouldRevealBat = () => showBattery.value || showBatteryFixed.value;

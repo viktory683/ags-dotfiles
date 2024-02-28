@@ -1,6 +1,5 @@
-import { sh } from 'lib/utils';
+import { sh, getIconFromArray } from 'lib/utils';
 import configs from 'ts/config';
-import { getIconFromArray } from 'ts/helpers';
 
 const VOLUME = Variable(
     {
