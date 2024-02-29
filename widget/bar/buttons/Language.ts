@@ -1,4 +1,5 @@
 import Hyprland from 'resource:///com/github/Aylur/ags/service/hyprland.js';
+import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 import conf from 'ags';
 import { sh } from 'lib/utils';
 import { lang } from 'lib/variables';

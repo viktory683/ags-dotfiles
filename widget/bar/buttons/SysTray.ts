@@ -1,5 +1,6 @@
 import Gdk from 'gi://Gdk';
 import SystemTray from 'resource:///com/github/Aylur/ags/service/systemtray.js';
+import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 
 export default () =>
     Widget.Box({

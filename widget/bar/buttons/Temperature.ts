@@ -6,24 +6,18 @@ import {
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 import conf from 'ags';
 import { getIconFromArray } from 'lib/utils';
-import { Label } from 'resource:///com/github/Aylur/ags/widgets/label.js';
 import { Revealer } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
-import { Box } from 'resource:///com/github/Aylur/ags/widgets/box.js';
-import { Button } from 'resource:///com/github/Aylur/ags/widgets/button.js';
+import Gtk from '@girs/gtk-3.0';
+import { Widget as Widget_t } from 'types/widgets/widget';
 
 const shouldRevealTemp = () =>
     showTemperature.value || showTemperatureFixed.value;
 
-function revealTemp(obj: Revealer<Label<unknown>, unknown>) {
+function revealTemp(obj: Revealer<Gtk.Widget, unknown>) {
     obj.revealChild = shouldRevealTemp();
 }
 
-function updateTempClasses(
-    obj: Button<
-        Box<Label<unknown> | Revealer<Label<unknown>, unknown>, unknown>,
-        unknown
-    >,
-) {
+function updateTempClasses(obj: Widget_t<unknown>) {
     obj.toggleClassName('fixed-hover', shouldRevealTemp());
 
     obj.toggleClassName('urgent', TEMPERATURE.value > conf.temperature.max);

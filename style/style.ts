@@ -2,9 +2,7 @@ import Utils from 'resource:///com/github/Aylur/ags/utils.js';
 import conf from 'ags';
 
 function resetCss() {
-    Utils.execAsync(
-        `sassc ${conf.style.paths.scss} ${conf.style.paths.css}`,
-    )
+    Utils.execAsync(`sassc ${conf.style.paths.scss} ${conf.style.paths.css}`)
         .then(() => {
             App.resetCss();
             App.applyCss(conf.style.paths.css);

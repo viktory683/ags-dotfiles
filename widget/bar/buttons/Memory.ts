@@ -1,29 +1,17 @@
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
-
 import conf from 'ags';
 import { MEMORY, mem_t, showMemory, showMemoryFixed } from 'lib/variables';
-import { Box } from 'resource:///com/github/Aylur/ags/widgets/box.js';
-import { ProgressBar } from 'resource:///com/github/Aylur/ags/widgets/progressbar.js';
 import { Revealer } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
-import { Button } from 'resource:///com/github/Aylur/ags/widgets/button.js';
-import { Label } from 'resource:///com/github/Aylur/ags/widgets/label.js';
+import Gtk from '@girs/gtk-3.0';
+import { Widget as Widget_t } from 'types/widgets/widget';
 
 const shouldRevealMem = () => showMemory.value || showMemoryFixed.value;
 
-function revealMem(obj: Revealer<Box<ProgressBar<unknown>, unknown>, unknown>) {
+function revealMem(obj: Revealer<Gtk.Widget, unknown>) {
     obj.revealChild = shouldRevealMem();
 }
 
-function updateMemoryClasses(
-    obj: Button<
-        Box<
-            | Label<unknown>
-            | Revealer<Box<ProgressBar<unknown>, unknown>, unknown>,
-            unknown
-        >,
-        unknown
-    >,
-) {
+function updateMemoryClasses(obj: Widget_t<unknown>) {
     obj.toggleClassName('fixed-hover', shouldRevealMem());
 
     obj.toggleClassName(

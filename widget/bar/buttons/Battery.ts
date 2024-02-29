@@ -2,23 +2,18 @@ import { showBattery, showBatteryFixed } from 'lib/variables';
 import battery from 'resource:///com/github/Aylur/ags/service/battery.js';
 import { getIconFromArray } from 'lib/utils';
 import conf from 'ags';
-import { Box } from 'resource:///com/github/Aylur/ags/widgets/box.js';
-import { Button } from 'resource:///com/github/Aylur/ags/widgets/button.js';
-import { Label } from 'resource:///com/github/Aylur/ags/widgets/label.js';
 import { Revealer } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
+import Widget from 'resource:///com/github/Aylur/ags/widget.js';
+import Gtk from '@girs/gtk-3.0';
+import { Widget as Widget_t } from 'types/widgets/widget';
 
 const shouldRevealBat = () => showBattery.value || showBatteryFixed.value;
 
-function revealBat(obj: Revealer<Label<unknown>, unknown>) {
+function revealBat(obj: Revealer<Gtk.Widget, unknown>) {
     obj.revealChild = shouldRevealBat();
 }
 
-function updateBatteryClasses(
-    obj: Button<
-        Box<Label<unknown> | Revealer<Label<unknown>, unknown>, unknown>,
-        unknown
-    >,
-) {
+function updateBatteryClasses(obj: Widget_t<unknown>) {
     obj.toggleClassName('fixed-hover', shouldRevealBat());
 
     obj.toggleClassName(

@@ -1,23 +1,18 @@
 import conf from 'ags';
 import { getIconFromArray, term } from 'lib/utils';
 import { NETWORK, showNetwork, showNetworkFixed } from 'lib/variables';
-import { Box } from 'resource:///com/github/Aylur/ags/widgets/box.js';
-import { Button } from 'resource:///com/github/Aylur/ags/widgets/button.js';
-import { Label } from 'resource:///com/github/Aylur/ags/widgets/label.js';
 import { Revealer } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
+import Widget from 'resource:///com/github/Aylur/ags/widget.js';
+import Gtk from '@girs/gtk-3.0';
+import { Widget as Widget_t } from 'types/widgets/widget';
 
 const shouldRevealNet = () => showNetwork.value || showNetworkFixed.value;
 
-function revealNet(obj: Revealer<Label<unknown>, unknown>) {
+function revealNet(obj: Revealer<Gtk.Widget, unknown>) {
     obj.revealChild = shouldRevealNet();
 }
 
-function updateNetworkClasses(
-    obj: Button<
-        Box<Label<unknown> | Revealer<Label<unknown>, unknown>, unknown>,
-        unknown
-    >,
-) {
+function updateNetworkClasses(obj: Widget_t<unknown>) {
     obj.toggleClassName('fixed-hover', shouldRevealNet());
 
     obj.toggleClassName('disabled', NETWORK.value === null);

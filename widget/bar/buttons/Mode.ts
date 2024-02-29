@@ -1,5 +1,6 @@
 import { mode } from 'lib/variables';
 import Hyprland from 'resource:///com/github/Aylur/ags/service/hyprland.js';
+import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 
 Hyprland.connect('submap', (_, name: string) => {
     mode.value = name;

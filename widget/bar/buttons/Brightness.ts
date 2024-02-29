@@ -2,25 +2,19 @@ import { sh } from 'lib/utils';
 import { showBrightness, showBrightnessFixed } from 'lib/variables';
 import conf from 'ags';
 import brightness from 'service/brightness';
-import { ProgressBar } from 'resource:///com/github/Aylur/ags/widgets/progressbar.js';
 import { Revealer } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
-import { Box } from 'resource:///com/github/Aylur/ags/widgets/box.js';
-import { Button } from 'resource:///com/github/Aylur/ags/widgets/button.js';
-import { Label } from 'resource:///com/github/Aylur/ags/widgets/label.js';
+import Widget from 'resource:///com/github/Aylur/ags/widget.js';
+import Gtk from '@girs/gtk-3.0';
+import { Widget as Widget_t } from 'types/widgets/widget';
 
 const shouldRevealBrightness = () =>
     showBrightness.value || showBrightnessFixed.value;
 
-function revealBrightness(obj: Revealer<ProgressBar<unknown>, unknown>) {
+function revealBrightness(obj: Revealer<Gtk.Widget, unknown>) {
     obj.revealChild = shouldRevealBrightness();
 }
 
-function updateBrightnessClasses(
-    obj: Button<
-        Box<Label<unknown> | Revealer<ProgressBar<unknown>, unknown>, unknown>,
-        unknown
-    >,
-) {
+function updateBrightnessClasses(obj: Widget_t<unknown>) {
     obj.toggleClassName('fixed-hover', shouldRevealBrightness());
 }
 

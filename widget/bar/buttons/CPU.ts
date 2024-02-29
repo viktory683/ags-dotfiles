@@ -1,28 +1,18 @@
 import { term } from 'lib/utils';
 import conf from 'ags';
 import { cpu, showCpuCores, showCpuCoresFixed } from 'lib/variables';
-import { Box } from 'resource:///com/github/Aylur/ags/widgets/box.js';
-import { ProgressBar } from 'resource:///com/github/Aylur/ags/widgets/progressbar.js';
 import { Revealer } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
-import { Button } from 'resource:///com/github/Aylur/ags/widgets/button.js';
-import { Label } from 'resource:///com/github/Aylur/ags/widgets/label.js';
+import Widget from 'resource:///com/github/Aylur/ags/widget.js';
+import Gtk from '@girs/gtk-3.0';
+import { Widget as Widget_t } from 'types/widgets/widget';
 
 const shouldRevealCPU = () => showCpuCores.value || showCpuCoresFixed.value;
 
-function revealCPU(obj: Revealer<Box<ProgressBar<unknown>, unknown>, unknown>) {
+function revealCPU(obj: Revealer<Gtk.Widget, unknown>) {
     obj.revealChild = shouldRevealCPU();
 }
 
-function updateCPUClasses(
-    obj: Button<
-        Box<
-            | Label<unknown>
-            | Revealer<Box<ProgressBar<unknown>, unknown>, unknown>,
-            unknown
-        >,
-        unknown
-    >,
-) {
+function updateCPUClasses(obj: Widget_t<unknown>) {
     obj.toggleClassName('fixed-hover', shouldRevealCPU());
 
     obj.toggleClassName(
