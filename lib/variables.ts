@@ -47,10 +47,7 @@ export type mem_t = {
 };
 
 export const MEMORY: Variable_t<mem_t[]> = Variable([], {
-    poll: [
-        conf.memory.interval,
-        () => JSON.parse(exec('jc free -tvw --si')),
-    ],
+    poll: [conf.memory.interval, () => JSON.parse(exec('jc free -tvw --si'))],
 });
 
 export const showMemory = Variable(false);
@@ -76,8 +73,36 @@ export const showBrightnessFixed = Variable(false);
 
 // ...
 
-// TODO wait for jc `1.25.x` build
-// then we can jc iwconfig wlna0
+export const VOLUME = Variable(
+    {
+        sink: {
+            volume: 0,
+            mute: false,
+            bluez: false,
+        },
+        source: {
+            volume: 0,
+            mute: false,
+            bluez: false,
+        },
+    },
+    {
+        listen: [
+            '/home/god/tmp/eww/pactl_py/.venv/bin/python /home/god/tmp/eww/pactl_py/new.py'.split(
+                ' ',
+            ),
+            (out) => JSON.parse(out),
+        ],
+    },
+);
+
+export const showPulseaudioFixed = Variable(false);
+export const showPulseaudio = Variable(false);
+
+// ...
+
+// TODO wait for [issue](https://github.com/kellyjonbrazil/jc/issues/541) to close and [package](https://archlinux.org/packages/extra/any/jc) to build
+// then we can just `jc iwconfig wlan0`
 export const NETWORK: Variable_t<null | number> = Variable(null, {
     poll: [
         2000,

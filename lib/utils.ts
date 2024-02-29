@@ -29,25 +29,6 @@ export function range(length: number, start = 1) {
 }
 
 /**
- * Maps a value from one range to another.
- * @param {number} x - The input value to be mapped.
- * @param {number} in_min - The minimum value of the input range.
- * @param {number} in_max - The maximum value of the input range.
- * @param {number} out_min - The minimum value of the output range.
- * @param {number} out_max - The maximum value of the output range.
- * @returns {number} - The mapped value in the output range.
- */
-function map(
-    x: number,
-    in_min: number,
-    in_max: number,
-    out_min: number,
-    out_max: number,
-): number {
-    return ((x - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min;
-}
-
-/**
  * Gets an icon from an array based on a percentage value within a specified range.
  * @template T - The type of elements in the array.
  * @param {T[]} icons - The array of icons.
@@ -62,6 +43,27 @@ export function getIconFromArray<T>(
     min: number = 0,
     max: number = 100,
 ): T {
+    /**
+     * Maps a value from one range to another.
+     * @param {number} x - The input value to be mapped.
+     * @param {number} in_min - The minimum value of the input range.
+     * @param {number} in_max - The maximum value of the input range.
+     * @param {number} out_min - The minimum value of the output range.
+     * @param {number} out_max - The maximum value of the output range.
+     * @returns {number} - The mapped value in the output range.
+     */
+    function map(
+        x: number,
+        in_min: number,
+        in_max: number,
+        out_min: number,
+        out_max: number,
+    ): number {
+        return (
+            ((x - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min
+        );
+    }
+
     let index = Math.floor(map(value, min, max, 0, icons.length));
     index = Math.max(0, Math.min(icons.length - 1, index));
     return icons[index];

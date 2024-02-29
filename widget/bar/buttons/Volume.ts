@@ -1,31 +1,6 @@
 import { sh, getIconFromArray } from 'lib/utils';
 import conf from 'ags';
-
-const VOLUME = Variable(
-    {
-        sink: {
-            volume: 0,
-            mute: false,
-            bluez: false,
-        },
-        source: {
-            volume: 0,
-            mute: false,
-            bluez: false,
-        },
-    },
-    {
-        listen: [
-            '/home/god/tmp/eww/pactl_py/.venv/bin/python /home/god/tmp/eww/pactl_py/new.py'.split(
-                ' ',
-            ),
-            (out) => JSON.parse(out),
-        ],
-    },
-);
-
-const showPulseaudioFixed = Variable(false);
-const showPulseaudio = Variable(false);
+import { VOLUME, showPulseaudio, showPulseaudioFixed } from 'lib/variables';
 
 const shouldRevealVol = () =>
     (showPulseaudio.value || showPulseaudioFixed.value) &&
