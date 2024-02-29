@@ -1,4 +1,4 @@
-import configs from 'ts/config';
+import conf from 'ags';
 
 import { config, forMonitors } from 'lib/utils';
 import { init } from 'lib/init';
@@ -8,7 +8,7 @@ export default config({
     onConfigParsed: () => {
         init();
     },
-    style: configs.style.paths.css,
+    style: conf.style.paths.css,
 
     windows: [...forMonitors(Bar)],
 });

@@ -1,6 +1,6 @@
 import { sh } from 'lib/utils';
 import { showBrightness, showBrightnessFixed } from 'lib/variables';
-import configs from 'ts/config';
+import conf from 'ags';
 import brightness from 'service/brightness';
 
 const shouldRevealBrightness = () =>
@@ -26,7 +26,7 @@ export default () =>
         child: Widget.Box({
             class_names: ['brightness'],
             children: [
-                Widget.Label({ label: configs.brightness.icon }),
+                Widget.Label({ label: conf.brightness.icon }),
                 Widget.Revealer({
                     transition: 'slide_right',
                     transition_duration: 500,

@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import { exec, readFile } from 'resource:///com/github/Aylur/ags/utils.js';
 import Variable from 'resource:///com/github/Aylur/ags/variable.js';
 import { Variable as Variable_t } from 'types/variable';
-import configs from 'ts/config';
+import conf from 'ags';
 import { wrapMpstat } from 'lib/utils';
 
 export const mode = Variable('');
@@ -10,11 +10,11 @@ export const mode = Variable('');
 // ...
 
 export const time = Variable('', {
-    poll: [1000, () => format(new Date(), configs.clock.time)],
+    poll: [1000, () => format(new Date(), conf.clock.time)],
 });
 
 export const date = Variable('', {
-    poll: [1000, () => format(new Date(), configs.clock.date)],
+    poll: [1000, () => format(new Date(), conf.clock.date)],
 });
 
 // ...
@@ -25,8 +25,8 @@ export const lang = Variable('');
 
 export const TEMPERATURE = Variable(0, {
     poll: [
-        configs.temperature.interval,
-        () => parseInt(readFile(configs.temperature.path).trim()) / 1000,
+        conf.temperature.interval,
+        () => parseInt(readFile(conf.temperature.path).trim()) / 1000,
     ],
 });
 
@@ -48,7 +48,7 @@ export type mem_t = {
 
 export const MEMORY: Variable_t<mem_t[]> = Variable([], {
     poll: [
-        configs.memory.interval,
+        conf.memory.interval,
         () => JSON.parse(exec('jc free -tvw --si')),
     ],
 });
@@ -60,8 +60,8 @@ export const showMemoryFixed = Variable(false);
 
 export const cpu = Variable(wrapMpstat(exec('jc mpstat -P ALL')), {
     poll: [
-        configs.cpu.interval,
-        `jc mpstat -P ALL ${configs.cpu.interval / 1000} 1`,
+        conf.cpu.interval,
+        `jc mpstat -P ALL ${conf.cpu.interval / 1000} 1`,
         (out) => wrapMpstat(out),
     ],
 });
@@ -81,7 +81,7 @@ export const showBrightnessFixed = Variable(false);
 export const NETWORK: Variable_t<null | number> = Variable(null, {
     poll: [
         2000,
-        `jc iw dev ${configs.network.interface} link`,
+        `jc iw dev ${conf.network.interface} link`,
         (out) => {
             let data = JSON.parse(out);
             if (data.length === 0) return null;

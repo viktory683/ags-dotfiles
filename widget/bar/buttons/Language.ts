@@ -1,5 +1,5 @@
 import Hyprland from 'resource:///com/github/Aylur/ags/service/hyprland.js';
-import configs from 'ts/config';
+import conf from 'ags';
 import { sh } from 'lib/utils';
 import { lang } from 'lib/variables';
 
@@ -18,6 +18,6 @@ export default () =>
                 'switchxkblayout at-translated-set-2-keyboard next',
             ),
         class_names: ['widget'],
-        label: lang.bind().as((v) => v && (configs.language.icons[v] || v)),
+        label: lang.bind().as((v) => v && (conf.language.icons[v] || v)),
         tooltip_text: lang.bind(),
     });

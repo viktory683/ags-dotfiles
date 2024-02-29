@@ -1,6 +1,6 @@
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 
-import configs from 'ts/config';
+import conf from 'ags';
 import { MEMORY, mem_t, showMemory, showMemoryFixed } from 'lib/variables';
 
 const shouldRevealMem = () => showMemory.value || showMemoryFixed.value;
@@ -14,7 +14,7 @@ function updateMemoryClasses(obj) {
 
     obj.toggleClassName(
         'urgent',
-        getMemoryPercentage(MEMORY.value, 'Mem') > configs.memory.alert,
+        getMemoryPercentage(MEMORY.value, 'Mem') > conf.memory.alert,
     );
 }
 
@@ -45,7 +45,7 @@ export default () =>
         child: Widget.Box({
             class_names: ['memory'],
             children: [
-                Widget.Label({ label: configs.memory.icon }),
+                Widget.Label({ label: conf.memory.icon }),
                 Widget.Revealer({
                     transition: 'slide_right',
                     transition_duration: 500,

@@ -1,5 +1,5 @@
 import { sh, getIconFromArray } from 'lib/utils';
-import configs from 'ts/config';
+import conf from 'ags';
 
 const VOLUME = Variable(
     {
@@ -56,25 +56,25 @@ export default () =>
             class_names: ['pulseaudio'],
             children: [
                 Widget.Label({
-                    label: configs.volume.bluetooth,
+                    label: conf.volume.bluetooth,
                     visible: VOLUME.bind().as((v) => v['sink']['bluez']),
                 }),
                 Widget.Label({
                     label: VOLUME.bind().as((v) => {
                         if (v['sink']['mute']) {
-                            return configs.volume.muted;
+                            return conf.volume.muted;
                         }
 
                         const vol = Math.round(v['sink']['volume']);
                         if (vol === 0) {
-                            return configs.volume.silent;
+                            return conf.volume.silent;
                         }
                         if (vol > 100) {
-                            return configs.volume.alert;
+                            return conf.volume.alert;
                         }
                         return getIconFromArray(
                             // @ts-ignore
-                            configs.volume.icons,
+                            conf.volume.icons,
                             vol,
                         );
                     }),
@@ -96,12 +96,12 @@ export default () =>
                     visible: VOLUME.bind().as((v) => !v['source']['mute']),
                     children: [
                         Widget.Label({
-                            label: configs.volume.bluetooth,
+                            label: conf.volume.bluetooth,
                             visible: VOLUME.bind().as(
                                 (v) => v['source']['bluez'],
                             ),
                         }),
-                        Widget.Label({ label: configs.volume.mic }),
+                        Widget.Label({ label: conf.volume.mic }),
                     ],
                 }),
             ],

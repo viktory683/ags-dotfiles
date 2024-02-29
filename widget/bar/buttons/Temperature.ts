@@ -4,7 +4,7 @@ import {
     showTemperatureFixed,
 } from 'lib/variables';
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
-import configs from 'ts/config';
+import conf from 'ags';
 import { getIconFromArray } from 'lib/utils';
 
 const shouldRevealTemp = () =>
@@ -17,7 +17,7 @@ function revealTemp(obj) {
 function updateTempClasses(obj) {
     obj.toggleClassName('fixed-hover', shouldRevealTemp());
 
-    obj.toggleClassName('urgent', TEMPERATURE.value > configs.temperature.max);
+    obj.toggleClassName('urgent', TEMPERATURE.value > conf.temperature.max);
 }
 
 export default () =>
@@ -34,10 +34,10 @@ export default () =>
                     label: TEMPERATURE.bind().as((v) =>
                         getIconFromArray(
                             // @ts-ignore
-                            configs.temperature.icons,
+                            conf.temperature.icons,
                             v,
-                            configs.temperature.min,
-                            configs.temperature.max,
+                            conf.temperature.min,
+                            conf.temperature.max,
                         ),
                     ),
                 }),

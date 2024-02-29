@@ -1,8 +1,15 @@
+import App from 'resource:///com/github/Aylur/ags/app.js';
+import { readFile } from 'resource:///com/github/Aylur/ags/utils.js';
+import * as toml from 'toml';
+import { PathReporter } from 'io-ts/PathReporter';
+import { isLeft } from 'fp-ts/lib/Either';
 import * as t from 'io-ts';
-// import { fromNullable } from 'io-ts-types';
+
+const rawConfig = readFile(`${App.configDir}/ags.toml`);
+let parsed = toml.parse(rawConfig);
 
 // TODO add some default values
-export const Config = t.type({
+const Config = t.type({
     term_launch: t.string, // default to search for term
 
     battery: t.type({
@@ -29,7 +36,7 @@ export const Config = t.type({
     cpu: t.type({
         icon: t.string,
         alert: t.number,
-        interval: t.number
+        interval: t.number,
     }),
 
     brightness: t.type({
@@ -85,3 +92,35 @@ export const Config = t.type({
 });
 
 export type Config_t = t.TypeOf<typeof Config>;
+
+const decoded = Config.decode(parsed);
+if (isLeft(decoded)) {
+    throw Error(
+        `Could not validate data: ${PathReporter.report(decoded).join('\n')}`,
+    );
+    // e.g.: Could not validate data: Invalid value "foo" supplied to : { userId: number, name: string }/userId: number
+}
+
+const decodedConfig: Config_t = decoded.right;
+
+// config post-process
+
+decodedConfig.style.paths.css = `${App.configDir}${parsed.style?.paths?.css}`;
+decodedConfig.style.paths.scss = `${App.configDir}${parsed.style?.paths?.scss}`;
+
+function convertIconsToArray(decodedConfigProperty: {
+    icons: string[] | string;
+}) {
+    if (typeof decodedConfigProperty.icons === 'string') {
+        decodedConfigProperty.icons = decodedConfigProperty.icons.split('');
+    }
+}
+
+convertIconsToArray(decodedConfig.battery);
+convertIconsToArray(decodedConfig.temperature);
+convertIconsToArray(decodedConfig.network);
+convertIconsToArray(decodedConfig.volume);
+
+// ...
+
+export default decodedConfig;

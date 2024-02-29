@@ -1,4 +1,4 @@
-import configs from 'ts/config';
+import conf from 'ags';
 import { getIconFromArray, term } from 'lib/utils';
 import { NETWORK, showNetwork, showNetworkFixed } from 'lib/variables';
 
@@ -28,10 +28,10 @@ export default () =>
                 Widget.Label({
                     label: NETWORK.bind().as((v) =>
                         v === null
-                            ? configs.network.disabled
+                            ? conf.network.disabled
                             : getIconFromArray(
                                   // @ts-ignore
-                                  configs.network.icons,
+                                  conf.network.icons,
                                   v,
                               ),
                     ),

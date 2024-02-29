@@ -1,5 +1,5 @@
 import { sh } from 'lib/utils';
-import configs from 'ts/config';
+import conf from 'ags';
 import Hyprland from 'resource:///com/github/Aylur/ags/service/hyprland.js';
 
 const dispatch = (ws: string | number) => {
@@ -14,8 +14,8 @@ export default (ws: number = 10) =>
                 on_clicked: () => dispatch(i),
                 attribute: i,
                 label:
-                    configs.workspaces.icons[`${i}`] ||
-                    configs.workspaces.icons['default'],
+                    conf.workspaces.icons[`${i}`] ||
+                    conf.workspaces.icons['default'],
                 class_names: ['workspace', 'widget'],
             }),
         ),

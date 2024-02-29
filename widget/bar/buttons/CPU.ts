@@ -1,5 +1,5 @@
 import { term } from 'lib/utils';
-import configs from 'ts/config';
+import conf from 'ags';
 import { cpu, showCpuCores, showCpuCoresFixed } from 'lib/variables';
 
 const shouldRevealCPU = () => showCpuCores.value || showCpuCoresFixed.value;
@@ -13,7 +13,7 @@ function updateCPUClasses(obj) {
 
     obj.toggleClassName(
         'urgent',
-        100 - cpu.value.avg.percent_idle > configs.cpu.alert,
+        100 - cpu.value.avg.percent_idle > conf.cpu.alert,
     );
 }
 
@@ -28,7 +28,7 @@ export default () =>
         child: Widget.Box({
             class_names: ['cpu'],
             children: [
-                Widget.Label({ label: configs.cpu.icon }),
+                Widget.Label({ label: conf.cpu.icon }),
                 Widget.Revealer({
                     class_names: ['revealer'],
                     transition: 'slide_right',

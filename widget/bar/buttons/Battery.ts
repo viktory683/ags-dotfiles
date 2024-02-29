@@ -1,7 +1,7 @@
 import { showBattery, showBatteryFixed } from 'lib/variables';
 import battery from 'resource:///com/github/Aylur/ags/service/battery.js';
 import { getIconFromArray } from 'lib/utils';
-import configs from 'ts/config';
+import conf from 'ags';
 
 const shouldRevealBat = () => showBattery.value || showBatteryFixed.value;
 
@@ -14,7 +14,7 @@ function updateBatteryClasses(obj) {
 
     obj.toggleClassName(
         'urgent',
-        battery.percent <= configs.battery.alert && !battery.charging,
+        battery.percent <= conf.battery.alert && !battery.charging,
     );
 }
 
@@ -30,13 +30,13 @@ export default () =>
             children: [
                 Widget.Label().hook(battery, (self) => {
                     if (battery.charging) {
-                        self.label = configs.battery.charging;
+                        self.label = conf.battery.charging;
                         return;
                     }
 
                     self.label = getIconFromArray(
                         // @ts-ignore
-                        configs.battery.icons,
+                        conf.battery.icons,
                         battery.percent,
                     );
                 }),

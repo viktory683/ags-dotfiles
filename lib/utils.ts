@@ -3,7 +3,7 @@ import { type Config } from 'types/app';
 import Gtk from 'gi://Gtk?version=3.0';
 import Gdk from 'gi://Gdk';
 import Utils from 'resource:///com/github/Aylur/ags/utils.js';
-import configs from 'ts/config';
+import conf from 'ags';
 
 export function config<T extends Gtk.Window>(config: Config<T>) {
     return config;
@@ -73,7 +73,7 @@ export function getIconFromArray<T>(
  * @returns {Promise<string>} - A promise resolving to the command output.
  */
 export async function term(command: string): Promise<string> {
-    return sh(`${configs.term_launch} ${command}`);
+    return sh(`${conf.term_launch} ${command}`);
 }
 
 /**
