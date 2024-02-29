@@ -1,8 +1,8 @@
-import { format } from 'date-fns';
 import { exec, readFile } from 'resource:///com/github/Aylur/ags/utils.js';
 import Variable from 'resource:///com/github/Aylur/ags/variable.js';
 import conf from 'ags';
 import { wrapMpstat } from 'lib/utils';
+import GLib from 'gi://GLib';
 
 // ...
 
@@ -10,12 +10,8 @@ export const mode = Variable('');
 
 // ...
 
-export const time = Variable('', {
-    poll: [1000, () => format(new Date(), conf.clock.time)],
-});
-
-export const date = Variable('', {
-    poll: [1000, () => format(new Date(), conf.clock.date)],
+export const clock = Variable(GLib.DateTime.new_now_local(), {
+    poll: [1000, () => GLib.DateTime.new_now_local()],
 });
 
 // ...

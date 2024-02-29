@@ -68,8 +68,8 @@ scss = "/style/style.scss"
 css = "/style.css"
 
 [clock]
-time = " hh:mm:ss a"
-date = " eee, dd MMM yyyy"
+time = " %I:%M:%S %p"
+date = " %a, %d %b 20%y"
 
 [log]
 level = 'info'
