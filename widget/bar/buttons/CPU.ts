@@ -1,14 +1,28 @@
 import { term } from 'lib/utils';
 import conf from 'ags';
 import { cpu, showCpuCores, showCpuCoresFixed } from 'lib/variables';
+import { Box } from 'resource:///com/github/Aylur/ags/widgets/box.js';
+import { ProgressBar } from 'resource:///com/github/Aylur/ags/widgets/progressbar.js';
+import { Revealer } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
+import { Button } from 'resource:///com/github/Aylur/ags/widgets/button.js';
+import { Label } from 'resource:///com/github/Aylur/ags/widgets/label.js';
 
 const shouldRevealCPU = () => showCpuCores.value || showCpuCoresFixed.value;
 
-function revealCPU(obj) {
-    obj.reveal_child = shouldRevealCPU();
+function revealCPU(obj: Revealer<Box<ProgressBar<unknown>, unknown>, unknown>) {
+    obj.revealChild = shouldRevealCPU();
 }
 
-function updateCPUClasses(obj) {
+function updateCPUClasses(
+    obj: Button<
+        Box<
+            | Label<unknown>
+            | Revealer<Box<ProgressBar<unknown>, unknown>, unknown>,
+            unknown
+        >,
+        unknown
+    >,
+) {
     obj.toggleClassName('fixed-hover', shouldRevealCPU());
 
     obj.toggleClassName(
@@ -32,7 +46,7 @@ export default () =>
                 Widget.Revealer({
                     class_names: ['revealer'],
                     transition: 'slide_right',
-                    transition_duration: 500,
+                    transitionDuration: 500,
                     child: Widget.Box({
                         children: cpu.value.cores.map((core) =>
                             Widget.ProgressBar({

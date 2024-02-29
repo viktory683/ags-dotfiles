@@ -2,14 +2,28 @@ import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 
 import conf from 'ags';
 import { MEMORY, mem_t, showMemory, showMemoryFixed } from 'lib/variables';
+import { Box } from 'resource:///com/github/Aylur/ags/widgets/box.js';
+import { ProgressBar } from 'resource:///com/github/Aylur/ags/widgets/progressbar.js';
+import { Revealer } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
+import { Button } from 'resource:///com/github/Aylur/ags/widgets/button.js';
+import { Label } from 'resource:///com/github/Aylur/ags/widgets/label.js';
 
 const shouldRevealMem = () => showMemory.value || showMemoryFixed.value;
 
-function revealMem(obj) {
-    obj.reveal_child = shouldRevealMem();
+function revealMem(obj: Revealer<Box<ProgressBar<unknown>, unknown>, unknown>) {
+    obj.revealChild = shouldRevealMem();
 }
 
-function updateMemoryClasses(obj) {
+function updateMemoryClasses(
+    obj: Button<
+        Box<
+            | Label<unknown>
+            | Revealer<Box<ProgressBar<unknown>, unknown>, unknown>,
+            unknown
+        >,
+        unknown
+    >,
+) {
     obj.toggleClassName('fixed-hover', shouldRevealMem());
 
     obj.toggleClassName(
@@ -48,7 +62,7 @@ export default () =>
                 Widget.Label({ label: conf.memory.icon }),
                 Widget.Revealer({
                     transition: 'slide_right',
-                    transition_duration: 500,
+                    transitionDuration: 500,
                     class_names: ['revealer'],
                     child: Widget.Box({
                         children: [

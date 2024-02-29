@@ -5,5 +5,5 @@ export default () =>
     Widget.Label({
         class_names: ['clock', 'widget'],
         label: time.bind(),
-        tooltip_text: date.bind(),
+        tooltipText: date.bind(),
     });

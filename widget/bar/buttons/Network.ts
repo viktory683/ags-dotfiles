@@ -1,14 +1,23 @@
 import conf from 'ags';
 import { getIconFromArray, term } from 'lib/utils';
 import { NETWORK, showNetwork, showNetworkFixed } from 'lib/variables';
+import { Box } from 'resource:///com/github/Aylur/ags/widgets/box.js';
+import { Button } from 'resource:///com/github/Aylur/ags/widgets/button.js';
+import { Label } from 'resource:///com/github/Aylur/ags/widgets/label.js';
+import { Revealer } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
 
 const shouldRevealNet = () => showNetwork.value || showNetworkFixed.value;
 
-function revealNet(obj) {
-    obj.reveal_child = shouldRevealNet();
+function revealNet(obj: Revealer<Label<unknown>, unknown>) {
+    obj.revealChild = shouldRevealNet();
 }
 
-function updateNetworkClasses(obj) {
+function updateNetworkClasses(
+    obj: Button<
+        Box<Label<unknown> | Revealer<Label<unknown>, unknown>, unknown>,
+        unknown
+    >,
+) {
     obj.toggleClassName('fixed-hover', shouldRevealNet());
 
     obj.toggleClassName('disabled', NETWORK.value === null);
@@ -38,7 +47,7 @@ export default () =>
                 }),
                 Widget.Revealer({
                     transition: 'slide_right',
-                    transition_duration: 500,
+                    transitionDuration: 500,
                     class_names: ['revealer'],
                     visible: NETWORK.bind().as((v) => v !== null),
                     child: Widget.Label().bind('label', NETWORK, 'value', (v) =>

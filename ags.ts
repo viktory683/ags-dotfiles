@@ -8,7 +8,6 @@ import * as t from 'io-ts';
 const rawConfig = readFile(`${App.configDir}/ags.toml`);
 let parsed = toml.parse(rawConfig);
 
-// TODO add some default values
 const Config = t.type({
     term_launch: t.string, // default to search for term
 

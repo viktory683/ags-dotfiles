@@ -9,11 +9,11 @@
         "allowJs": true,
         "checkJs": true,
         "strict": true,
-        "noImplicitAny": false,
+        "noImplicitAny": true,
         "baseUrl": ".",
         "typeRoots": [
             "./types/ags.d.ts",
-            "./node_modules/@types"
+            "./node_modules/@girs"
         ],
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
@@ -23,5 +23,5 @@
         "./config.js",
         "./build/",
         "./types/@girs/"
-    ]
+    ],
 }

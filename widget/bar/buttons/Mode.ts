@@ -7,7 +7,7 @@ Hyprland.connect('submap', (_, name: string) => {
 
 export default () =>
     Widget.Revealer({
-        transition_duration: 500,
+        transitionDuration: 500,
         transition: 'slide_right',
         revealChild: mode.bind().as((v) => v !== ''),
         child: Widget.Button({

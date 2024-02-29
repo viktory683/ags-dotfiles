@@ -2,14 +2,23 @@ import { showBattery, showBatteryFixed } from 'lib/variables';
 import battery from 'resource:///com/github/Aylur/ags/service/battery.js';
 import { getIconFromArray } from 'lib/utils';
 import conf from 'ags';
+import { Box } from 'resource:///com/github/Aylur/ags/widgets/box.js';
+import { Button } from 'resource:///com/github/Aylur/ags/widgets/button.js';
+import { Label } from 'resource:///com/github/Aylur/ags/widgets/label.js';
+import { Revealer } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
 
 const shouldRevealBat = () => showBattery.value || showBatteryFixed.value;
 
-function revealBat(obj) {
-    obj.reveal_child = shouldRevealBat();
+function revealBat(obj: Revealer<Label<unknown>, unknown>) {
+    obj.revealChild = shouldRevealBat();
 }
 
-function updateBatteryClasses(obj) {
+function updateBatteryClasses(
+    obj: Button<
+        Box<Label<unknown> | Revealer<Label<unknown>, unknown>, unknown>,
+        unknown
+    >,
+) {
     obj.toggleClassName('fixed-hover', shouldRevealBat());
 
     obj.toggleClassName(
@@ -42,7 +51,7 @@ export default () =>
                 }),
                 Widget.Revealer({
                     transition: 'slide_right',
-                    transition_duration: 500,
+                    transitionDuration: 500,
                     class_names: ['revealer'],
                     child: Widget.Label({
                         label: battery

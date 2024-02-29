@@ -1,9 +1,10 @@
 import { format } from 'date-fns';
 import { exec, readFile } from 'resource:///com/github/Aylur/ags/utils.js';
 import Variable from 'resource:///com/github/Aylur/ags/variable.js';
-import { Variable as Variable_t } from 'types/variable';
 import conf from 'ags';
 import { wrapMpstat } from 'lib/utils';
+
+// ...
 
 export const mode = Variable('');
 
@@ -46,8 +47,15 @@ export type mem_t = {
     available?: number;
 };
 
-export const MEMORY: Variable_t<mem_t[]> = Variable([], {
-    poll: [conf.memory.interval, () => JSON.parse(exec('jc free -tvw --si'))],
+export const MEMORY = Variable([], {
+    poll: [
+        conf.memory.interval,
+        // yes we can simply `() => JSON.parse(...)` but I did that for type hints
+        () => {
+            let data: mem_t[] = JSON.parse(exec('jc free -tvw --si'));
+            return data;
+        },
+    ],
 });
 
 export const showMemory = Variable(false);
@@ -103,7 +111,7 @@ export const showPulseaudio = Variable(false);
 
 // TODO wait for [issue](https://github.com/kellyjonbrazil/jc/issues/541) to close and [package](https://archlinux.org/packages/extra/any/jc) to build
 // then we can just `jc iwconfig wlan0`
-export const NETWORK: Variable_t<null | number> = Variable(null, {
+export const NETWORK = Variable(null, {
     poll: [
         2000,
         `jc iw dev ${conf.network.interface} link`,

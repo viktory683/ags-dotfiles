@@ -1,16 +1,30 @@
 import { sh, getIconFromArray } from 'lib/utils';
 import conf from 'ags';
 import { VOLUME, showPulseaudio, showPulseaudioFixed } from 'lib/variables';
+import { Box } from 'resource:///com/github/Aylur/ags/widgets/box.js';
+import { Button } from 'resource:///com/github/Aylur/ags/widgets/button.js';
+import { Label } from 'resource:///com/github/Aylur/ags/widgets/label.js';
+import { Revealer } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
 
 const shouldRevealVol = () =>
     (showPulseaudio.value || showPulseaudioFixed.value) &&
     VOLUME.value['sink']['volume'] > 0;
 
-function revealVol(obj) {
-    obj.reveal_child = shouldRevealVol();
+function revealVol(obj: Revealer<Label<unknown>, unknown>) {
+    obj.revealChild = shouldRevealVol();
 }
 
-function updateVolumeClasses(obj) {
+function updateVolumeClasses(
+    obj: Button<
+        Box<
+            | Label<unknown>
+            | Revealer<Label<unknown>, unknown>
+            | Box<Label<unknown>, unknown>,
+            unknown
+        >,
+        unknown
+    >,
+) {
     obj.toggleClassName('fixed-hover', shouldRevealVol());
 
     obj.toggleClassName('urgent', Math.round(VOLUME.value.sink.volume) > 100);
@@ -55,7 +69,6 @@ export default () =>
                     }),
                 }),
                 Widget.Revealer({
-                    reveal_child: false,
                     transition: 'slide_right',
                     class_names: ['revealer'],
                     child: Widget.Label({

@@ -6,15 +6,24 @@ import {
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 import conf from 'ags';
 import { getIconFromArray } from 'lib/utils';
+import { Label } from 'resource:///com/github/Aylur/ags/widgets/label.js';
+import { Revealer } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
+import { Box } from 'resource:///com/github/Aylur/ags/widgets/box.js';
+import { Button } from 'resource:///com/github/Aylur/ags/widgets/button.js';
 
 const shouldRevealTemp = () =>
     showTemperature.value || showTemperatureFixed.value;
 
-function revealTemp(obj) {
-    obj.reveal_child = shouldRevealTemp();
+function revealTemp(obj: Revealer<Label<unknown>, unknown>) {
+    obj.revealChild = shouldRevealTemp();
 }
 
-function updateTempClasses(obj) {
+function updateTempClasses(
+    obj: Button<
+        Box<Label<unknown> | Revealer<Label<unknown>, unknown>, unknown>,
+        unknown
+    >,
+) {
     obj.toggleClassName('fixed-hover', shouldRevealTemp());
 
     obj.toggleClassName('urgent', TEMPERATURE.value > conf.temperature.max);
@@ -42,7 +51,7 @@ export default () =>
                     ),
                 }),
                 Widget.Revealer({
-                    transition_duration: 500,
+                    transitionDuration: 500,
                     transition: 'slide_right',
                     class_names: ['revealer', 'right'],
                     child: Widget.Label({

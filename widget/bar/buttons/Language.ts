@@ -3,12 +3,44 @@ import conf from 'ags';
 import { sh } from 'lib/utils';
 import { lang } from 'lib/variables';
 
+interface Mouse {
+    address: string;
+    name: string;
+    defaultSpeed: number;
+}
+
+interface Keyboard {
+    address: string;
+    name: string;
+    rules: string;
+    model: string;
+    layout: string;
+    variant: string;
+    options: string;
+    active_keymap: string;
+    main: boolean;
+}
+
+interface Switch {
+    address: string;
+    name: string;
+}
+
+interface DeviceConfiguration {
+    mice: Mouse[];
+    keyboards: Keyboard[];
+    tablets: any[]; // Assuming tablets can have any structure, adjust as needed
+    touch: any[]; // Assuming touch can have any structure, adjust as needed
+    switches: Switch[];
+}
+
 Hyprland.connect('keyboard-layout', (_, __, layoutname: string) => {
     lang.value = layoutname;
 });
 
 sh('hyprctl devices -j').then((out) => {
-    lang.value = JSON.parse(out).keyboards.find((kb) => kb.main)?.active_keymap;
+    let data: DeviceConfiguration = JSON.parse(out);
+    lang.value = data.keyboards.find((kb) => kb.main)?.active_keymap || '';
 });
 
 export default () =>
@@ -19,5 +51,5 @@ export default () =>
             ),
         class_names: ['widget'],
         label: lang.bind().as((v) => v && (conf.language.icons[v] || v)),
-        tooltip_text: lang.bind(),
+        tooltipText: lang.bind(),
     });
