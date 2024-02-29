@@ -35,10 +35,6 @@ interface DeviceConfiguration {
     switches: Switch[];
 }
 
-Hyprland.connect('keyboard-layout', (_, __, layoutname: string) => {
-    lang.value = layoutname;
-});
-
 sh('hyprctl devices -j').then((out) => {
     let data: DeviceConfiguration = JSON.parse(out);
     lang.value = data.keyboards.find((kb) => kb.main)?.active_keymap || '';

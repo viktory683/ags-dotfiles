@@ -104,7 +104,6 @@ const decodedConfig: Config_t = decoded.right;
 
 // config post-process
 
-decodedConfig.style.paths.css = `${App.configDir}${parsed.style?.paths?.css}`;
 decodedConfig.style.paths.scss = `${App.configDir}${parsed.style?.paths?.scss}`;
 
 function convertIconsToArray(decodedConfigProperty: {

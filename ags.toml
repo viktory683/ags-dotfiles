@@ -65,7 +65,7 @@ icon = ""
 
 [style.paths]
 scss = "/style/style.scss"
-css = "/style.css"
+css = "/tmp/ags/build/style.css"
 
 [clock]
 time = " %I:%M:%S %p"
