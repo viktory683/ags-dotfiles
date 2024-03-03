@@ -1,6 +1,5 @@
 // top | right | bottom | left
 
-
 // https://m2.material.io/design/color/dark-theme.html
 $surface: #121212;
 // $surface1dp: rgba($surface, .05);
@@ -64,7 +63,7 @@ $onyx: #404040;
 
 * {
     all: unset; // Unsets everything so you can style everything from scratch
-    font-family: 'Bars', 'SF Pro Display', 'Font Awesome 6 Pro Solid',
+    font-family: 'runcat', 'SF Pro Display', 'Font Awesome 6 Pro Solid',
         'Font Awesome 6 Pro Regular', 'Font Awesome 6 Pro Brands';
     font-size: 10.5pt;
     // border: red solid 1pt;
@@ -155,9 +154,8 @@ window.bar > * > * > *,
     }
 }
 
-window.bar > * > * > * > *:not(.workspace)
-,.workspace > *
-{
+window.bar > * > * > * > *:not(.workspace),
+.workspace > * {
     margin: 2pt 4pt;
     // border: blue solid 1pt;
 }

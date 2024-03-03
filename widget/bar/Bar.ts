@@ -11,6 +11,7 @@ import Brightness from './buttons/Brightness';
 import Volume from './buttons/Volume';
 import Network from './buttons/Network';
 import Battery from './buttons/Battery';
+import RunCat from './buttons/RunCat';
 
 const Expander = () => Widget.Box({ expand: true });
 
@@ -32,6 +33,7 @@ export default (monitor: number) =>
                 children: [
                     Expander(),
                     SysTray(),
+                    RunCat(),
                     Language(),
                     Temperature(),
                     Memory(),
