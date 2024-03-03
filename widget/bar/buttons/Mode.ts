@@ -20,7 +20,6 @@ export default () =>
             self.toggleClassName(`mode_${mode.value}`, true);
             if (oldMode) self.toggleClassName(oldMode, false);
 
-            // @ts-ignore
             if (mode.value !== '') self.label = mode.value;
         }),
     });

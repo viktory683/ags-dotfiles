@@ -1,13 +1,7 @@
-import { type Config } from 'types/app';
-// @ts-ignore
 import Gtk from 'gi://Gtk?version=3.0';
 import Gdk from 'gi://Gdk';
 import Utils from 'resource:///com/github/Aylur/ags/utils.js';
 import conf from 'ags';
-
-export function config<T extends Gtk.Window>(config: Config<T>) {
-    return config;
-}
 
 export async function sh(cmd: string | string[]) {
     return Utils.execAsync(cmd).catch((err) => {
