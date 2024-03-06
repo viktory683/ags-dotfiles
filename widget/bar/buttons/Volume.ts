@@ -1,4 +1,4 @@
-import { sh, getIconFromArray } from 'lib/utils';
+import { sh, getIconFromArray, term } from 'lib/utils';
 import conf from 'ags';
 import { VOLUME, showPulseaudio, showPulseaudioFixed } from 'lib/variables';
 import { Revealer } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
@@ -25,6 +25,7 @@ function updateVolumeClasses(obj: Widget_t<unknown>) {
 export default () =>
     Widget.Button({
         on_clicked: () => sh('pactl set-sink-mute @DEFAULT_SINK@ toggle'),
+        on_secondary_click: () => term('rsmixer'),
         on_middle_click: () =>
             (showPulseaudioFixed.value = !showPulseaudioFixed.value),
         on_hover: () => (showPulseaudio.value = true),
