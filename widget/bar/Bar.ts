@@ -10,6 +10,7 @@ import CPU from './buttons/CPU';
 import Brightness from './buttons/Brightness';
 import Volume from './buttons/Volume';
 import Network from './buttons/Network';
+import Notification from './buttons/Notification';
 import Battery from './buttons/Battery';
 import RunCat from './buttons/RunCat';
 
@@ -21,10 +22,7 @@ export default (monitor: number) =>
         child: Widget.CenterBox({
             css: 'min-width: 2px; min-height: 2px;',
             start_widget: Widget.Box({
-                children: [
-                    Workspaces(12),
-                    Mode(),
-                ],
+                children: [Workspaces(12), Mode()],
             }),
             center_widget: Widget.Box({
                 children: [Date()],
@@ -41,6 +39,7 @@ export default (monitor: number) =>
                     Brightness(),
                     Volume(),
                     Network(),
+                    Notification(),
                     Battery(),
                 ],
             }),

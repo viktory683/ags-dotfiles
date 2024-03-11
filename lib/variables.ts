@@ -129,3 +129,8 @@ export const showBattery = Variable(false);
 export const showBatteryFixed = Variable(false);
 
 // ...
+
+export const notification = Variable(
+    { text: '', alt: '', tooltip: '', class: '' },
+    { listen: ['swaync-client -swb', (out) => JSON.parse(out)] },
+);

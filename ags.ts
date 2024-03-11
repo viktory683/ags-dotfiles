@@ -66,6 +66,10 @@ const Config = t.type({
         default: t.string,
     }),
 
+    notification: t.type({
+        icons: t.record(t.string, t.string),
+    }),
+
     language: t.type({
         icons: t.record(t.string, t.string),
     }),
