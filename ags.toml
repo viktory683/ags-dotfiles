@@ -3,7 +3,8 @@ term_launch = "alacritty -e"
 [battery]
 icons = ""
 charging = ""
-alert = 20
+low = 20
+critical_low = 5
 
 [temperature]
 icons = ""

@@ -6,6 +6,10 @@ import GLib from 'gi://GLib';
 
 // ...
 
+export const bus_name = App.get_dbus_object_path()?.split('/').slice(-1)[0];
+
+// ...
+
 export const mode = Variable('');
 
 // ...
@@ -127,6 +131,8 @@ export const showNetworkFixed = Variable(false);
 
 export const showBattery = Variable(false);
 export const showBatteryFixed = Variable(false);
+
+export const ignore_battery = Variable(false);
 
 // ...
 

@@ -14,7 +14,8 @@ const Config = t.type({
     battery: t.type({
         icons: t.union([t.string, t.array(t.string)]),
         charging: t.string,
-        alert: t.number,
+        low: t.number,
+        critical_low: t.number,
     }),
 
     temperature: t.type({

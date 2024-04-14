@@ -18,7 +18,7 @@ function updateBatteryClasses(obj: Widget_t<unknown>) {
 
     obj.toggleClassName(
         'urgent',
-        battery.percent <= conf.battery.alert && !battery.charging,
+        battery.percent <= conf.battery.low && !battery.charging,
     );
 }
 
