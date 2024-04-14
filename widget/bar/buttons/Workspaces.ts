@@ -2,6 +2,7 @@ import { sh } from 'lib/utils';
 import conf from 'ags';
 import Hyprland from 'resource:///com/github/Aylur/ags/service/hyprland.js';
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
+import { urgent_workspace_id } from 'lib/variables';
 
 const dispatch = (ws: string | number) => {
     sh(`hyprctl dispatch workspace ${ws}`);
@@ -35,6 +36,11 @@ export default (ws: number = 10) =>
                                 ws.id === Hyprland.active.workspace.id &&
                                 ws.id === btn.attribute,
                         ),
+                    );
+
+                    btn.toggleClassName(
+                        'urgent',
+                        btn.attribute == urgent_workspace_id.value,
                     );
                 }),
             ),

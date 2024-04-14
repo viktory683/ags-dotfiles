@@ -3,6 +3,7 @@ import Variable from 'resource:///com/github/Aylur/ags/variable.js';
 import conf from 'ags';
 import { wrapMpstat } from 'lib/utils';
 import GLib from 'gi://GLib';
+import { Variable as Var } from 'types/variable';
 
 // ...
 
@@ -11,6 +12,12 @@ export const bus_name = App.get_dbus_object_path()?.split('/').slice(-1)[0];
 // ...
 
 export const mode = Variable('');
+
+// @ts-ignore
+export const urgent_window_address: Var<undefined | string> =
+    Variable(undefined);
+// @ts-ignore
+export const urgent_workspace_id: Var<undefined | number> = Variable(undefined);
 
 // ...
 
