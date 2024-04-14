@@ -9,6 +9,7 @@
         "allowJs": true,
         "checkJs": true,
         "strict": true,
+        "strictNullChecks": true,
         "noImplicitAny": true,
         "baseUrl": ".",
         "typeRoots": [

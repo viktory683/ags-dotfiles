@@ -6,8 +6,6 @@
 - [ ] Модули
     - [ ] Clock
         - [ ] Calendar
-    - [ ] Tray
-    - [ ] runcat
     - [ ] touchpad
 - [ ] Hover bug
 
@@ -31,11 +29,11 @@
 
 ### Done ✓
 
-- [ ] Модули
+- [x] Модули
     - [x] Workspaces
     - [x] Scratchpad
     - [x] Mode
-    - [ ] Clock
+    - [x] Clock
         - [x] Clock itself
     - [x] language
     - [x] temperature
@@ -48,5 +46,7 @@
     - [x] network
     - [x] battery
         - [x] Добавить к уведомлению батареи кнопку "Я в курсе" (отключает спам до, скажем, 5%)
+    - [x] Tray
+    - [x] runcat
 - [x] Избавиться от бесчисленного колличества `// @ts-ignore`
     ags обновлися до новой версии, поэтому `bind` теперь ожидает в качестве аттрибута литерал `attribute`

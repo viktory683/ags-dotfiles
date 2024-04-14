@@ -109,17 +109,40 @@ export const showPulseaudio = Variable(false);
 
 // ...
 
-// TODO wait for [issue](https://github.com/kellyjonbrazil/jc/issues/541) to close and [package](https://archlinux.org/packages/extra/any/jc) to build
-// then we can just `jc iwconfig wlan0`
 export const NETWORK = Variable(null, {
     poll: [
         2000,
-        `jc iw dev ${conf.network.interface} link`,
+        `jc iwconfig ${conf.network.interface}`,
         (out) => {
-            let data = JSON.parse(out);
+            let data: {
+                name: string;
+                protocol: string;
+                essid: string;
+                mode: string;
+                frequency: number;
+                frequency_unit: string;
+                access_point: string;
+                bit_rate: number;
+                bit_rate_unit: string;
+                tx_power: number;
+                tx_power_unit: string;
+                retry_short_limit: number;
+                rts_threshold: boolean;
+                fragment_threshold: boolean;
+                power_management: boolean;
+                link_quality: string;
+                signal_level: number;
+                signal_level_unit: string;
+                rx_invalid_nwid: number;
+                rx_invalid_crypt: number;
+                rx_invalid_frag: number;
+                tx_excessive_retries: number;
+                invalid_misc: number;
+                missed_beacon: number;
+            }[] = JSON.parse(out);
             if (data.length === 0) return null;
 
-            return Math.round(1.2 * (data[0].signal_dbm + 100));
+            return Math.round((+data[0].link_quality.split('/')[0] / 70) * 100);
         },
     ],
 });
