@@ -1,26 +1,30 @@
 import { sh, getIconFromArray, term } from 'lib/utils';
 import conf from 'ags';
-import { VOLUME, showPulseaudio, showPulseaudioFixed } from 'lib/variables';
+import { showPulseaudio, showPulseaudioFixed } from 'lib/variables';
+import Audio from 'resource:///com/github/Aylur/ags/service/audio.js';
 import { Revealer } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 import Gtk from '@girs/gtk-3.0';
-import { Widget as Widget_t } from 'types/widgets/widget';
+import { Widget as Widget_t } from 'types/widgets/widget'; // TODO `import type ...`?
 
 const shouldRevealVol = () =>
     (showPulseaudio.value || showPulseaudioFixed.value) &&
-    VOLUME.value['sink']['volume'] > 0;
+    Audio.speaker.volume > 0;
 
-function revealVol(obj: Revealer<Gtk.Widget, unknown>) {
+const revealVol = (obj: Revealer<Gtk.Widget, unknown>) => {
     obj.revealChild = shouldRevealVol();
-}
+};
 
-function updateVolumeClasses(obj: Widget_t<unknown>) {
+const updateVolumeClasses = (obj: Widget_t<unknown>) => {
+    const vol = Math.round(Audio.speaker.volume * 100);
+    const muted = Audio.speaker.is_muted ?? true;
+
     obj.toggleClassName('fixed-hover', shouldRevealVol());
 
-    obj.toggleClassName('urgent', Math.round(VOLUME.value.sink.volume) > 100);
+    obj.toggleClassName('urgent', vol > 100);
 
-    obj.toggleClassName('disabled', VOLUME.value.sink.mute);
-}
+    obj.toggleClassName('disabled', muted);
+};
 
 export default () =>
     Widget.Button({
@@ -37,48 +41,50 @@ export default () =>
             children: [
                 Widget.Label({
                     label: conf.volume.bluetooth,
-                    visible: VOLUME.bind().as((v) => v['sink']['bluez']),
+                    // TODO don't see changes in default device
+                    visible: Audio.speaker
+                        .bind('name')
+                        .as((v) => v?.includes('bluez')),
                 }),
                 Widget.Label({
-                    label: VOLUME.bind().as((v) => {
-                        if (v['sink']['mute']) {
+                    // TODO don't see changes if it was muted/unmuted
+                    label: Audio.speaker.bind('volume').as((v) => {
+                        if (Audio.speaker.is_muted) {
                             return conf.volume.muted;
                         }
 
-                        const vol = Math.round(v['sink']['volume']);
+                        const vol = Math.round(v * 100);
                         if (vol === 0) {
                             return conf.volume.silent;
                         }
-                        if (vol > 100) {
-                            return conf.volume.alert;
-                        }
-                        return getIconFromArray(
-                            // @ts-ignore
-                            conf.volume.icons,
-                            vol,
-                        );
+
+                        return vol > 100
+                            ? conf.volume.alert
+                            : // @ts-ignore
+                              getIconFromArray(conf.volume.icons, vol);
                     }),
                 }),
                 Widget.Revealer({
                     transition: 'slide_right',
                     class_names: ['revealer'],
                     child: Widget.Label({
-                        label: VOLUME.bind().as(
-                            (v) => `${Math.round(v['sink']['volume'])}%`,
-                        ),
+                        label: Audio.speaker
+                            .bind('volume')
+                            .as((v) => `${Math.round(v * 100)}%`),
                     }),
                 })
-                    .hook(VOLUME, revealVol)
+                    .hook(Audio, revealVol)
                     .hook(showPulseaudio, revealVol)
                     .hook(showPulseaudioFixed, revealVol),
                 Widget.Box({
-                    visible: VOLUME.bind().as((v) => !v['source']['mute']),
+                    visible: Audio.microphone.bind('is_muted').as((v) => !v),
                     children: [
                         Widget.Label({
                             label: conf.volume.bluetooth,
-                            visible: VOLUME.bind().as(
-                                (v) => v['source']['bluez'],
-                            ),
+                            // TODO don't see changes in default device
+                            visible: Audio.microphone
+                                .bind('name')
+                                .as((v) => v?.includes('bluez')),
                         }),
                         Widget.Label({ label: conf.volume.mic }),
                     ],
@@ -88,4 +94,4 @@ export default () =>
     })
         .hook(showPulseaudio, updateVolumeClasses)
         .hook(showPulseaudioFixed, updateVolumeClasses)
-        .hook(VOLUME, updateVolumeClasses);
+        .hook(Audio, updateVolumeClasses);

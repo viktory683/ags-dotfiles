@@ -83,27 +83,6 @@ export const showBrightnessFixed = Variable(false);
 
 // ...
 
-export const VOLUME = Variable(
-    {
-        sink: {
-            volume: 0,
-            mute: false,
-            bluez: false,
-        },
-        source: {
-            volume: 0,
-            mute: false,
-            bluez: false,
-        },
-    },
-    {
-        listen: [
-            '/home/god/tmp/eww/pactl_py/.venv/bin/python /home/god/tmp/eww/pactl_py/new.py',
-            (out) => JSON.parse(out),
-        ],
-    },
-);
-
 export const showPulseaudioFixed = Variable(false);
 export const showPulseaudio = Variable(false);
 
