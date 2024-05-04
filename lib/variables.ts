@@ -21,8 +21,10 @@ export const urgent_workspace_id: Var<undefined | number> = Variable(undefined);
 
 // ...
 
-export const clock = Variable(GLib.DateTime.new_now_local(), {
-    poll: [1000, () => GLib.DateTime.new_now_local()],
+const get_time = () => GLib.DateTime.new_now_local();
+
+export const clock = Variable(get_time(), {
+    poll: [1000, () => get_time()],
 });
 
 // ...
@@ -54,15 +56,8 @@ export type mem_t = {
     available?: number;
 };
 
-export const MEMORY = Variable([], {
-    poll: [
-        conf.memory.interval,
-        // yes we can simply `() => JSON.parse(...)` but I did that for type hints
-        () => {
-            let data: mem_t[] = JSON.parse(exec('jc free -tvw --si'));
-            return data;
-        },
-    ],
+export const MEMORY: Var<mem_t[]> = Variable([], {
+    poll: [conf.memory.interval, () => JSON.parse(exec('jc free -tvw --si'))],
 });
 
 export const showMemory = Variable(false);
@@ -73,7 +68,7 @@ export const showMemoryFixed = Variable(false);
 export const cpu = Variable(wrapMpstat(exec('jc mpstat -P ALL')), {
     poll: [
         conf.cpu.interval,
-        `jc mpstat -P ALL ${conf.cpu.interval / 1000} 1`,
+        `jc mpstat -P ALL ${Math.trunc(conf.cpu.interval / 1000)} 1`,
         (out) => wrapMpstat(out),
     ],
 });
@@ -103,9 +98,7 @@ export const VOLUME = Variable(
     },
     {
         listen: [
-            '/home/god/tmp/eww/pactl_py/.venv/bin/python /home/god/tmp/eww/pactl_py/new.py'.split(
-                ' ',
-            ),
+            '/home/god/tmp/eww/pactl_py/.venv/bin/python /home/god/tmp/eww/pactl_py/new.py',
             (out) => JSON.parse(out),
         ],
     },

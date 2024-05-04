@@ -1,17 +1,16 @@
 import { sh } from 'lib/utils';
 import conf from 'ags';
-import Hyprland from 'resource:///com/github/Aylur/ags/service/hyprland.js';
+import hyprland from 'resource:///com/github/Aylur/ags/service/hyprland.js';
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 import { urgent_workspace_id } from 'lib/variables';
 
-const dispatch = (ws: string | number) => {
+const dispatch = (ws: string | number) =>
     sh(`hyprctl dispatch workspace ${ws}`);
-};
 
 export default (ws: number = 10) =>
     Widget.Box({
         class_names: ['workspaces'],
-        children: Array.from({ length: ws }, (_, i) => i + 1).map((i) =>
+        children: Array.from({ length: ws }, (_, i) => 1 + i).map((i) =>
             Widget.Button({
                 on_clicked: () => dispatch(i),
                 attribute: i,
@@ -23,24 +22,29 @@ export default (ws: number = 10) =>
         ),
 
         setup: (self) =>
-            self.hook(Hyprland, () =>
+            self.hook(hyprland, () =>
                 self.children.forEach((btn) => {
-                    btn.visible = Hyprland.workspaces.some(
+                    btn.visible = hyprland.workspaces.some(
+                        // @ts-ignore
                         (ws) => ws.id === btn.attribute,
                     );
 
+                    // @ts-ignore
                     btn.toggleClassName(
                         'focused',
-                        Hyprland.workspaces.some(
+                        hyprland.workspaces.some(
                             (ws) =>
-                                ws.id === Hyprland.active.workspace.id &&
+                                ws.id === hyprland.active.workspace.id &&
+                                // @ts-ignore
                                 ws.id === btn.attribute,
                         ),
                     );
 
+                    // @ts-ignore
                     btn.toggleClassName(
                         'urgent',
-                        btn.attribute == urgent_workspace_id.value,
+                        // @ts-ignore
+                        btn.attribute === urgent_workspace_id.value,
                     );
                 }),
             ),

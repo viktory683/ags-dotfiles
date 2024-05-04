@@ -6,6 +6,8 @@ export default async function init() {
         lang.value = layoutname;
     });
 
+    // urgency
+
     Hyprland.connect('urgent-window', (_, windowaddress: string) => {
         urgent_window_address.value = windowaddress;
 
@@ -20,4 +22,6 @@ export default async function init() {
             urgent_workspace_id.value = undefined;
         }
     });
+
+    // ...
 }

@@ -124,6 +124,12 @@ convertIconsToArray(decodedConfig.temperature);
 convertIconsToArray(decodedConfig.network);
 convertIconsToArray(decodedConfig.volume);
 
+decodedConfig.cpu.interval = Math.trunc(decodedConfig.cpu.interval / 1000);
+if (decodedConfig.cpu.interval <= 0) {
+    throw Error(`decodedConfig.cpu.interval should be greater than 1000`);
+}
+decodedConfig.cpu.interval = decodedConfig.cpu.interval * 1000;
+
 // ...
 
 export default decodedConfig;
