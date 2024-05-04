@@ -68,7 +68,7 @@ export const showMemoryFixed = Variable(false);
 export const cpu = Variable(wrapMpstat(exec('jc mpstat -P ALL')), {
     poll: [
         conf.cpu.interval,
-        `jc mpstat -P ALL ${Math.trunc(conf.cpu.interval / 1000)} 1`,
+        `jc mpstat -P ALL ${conf.cpu.interval / 1000} 1`,
         (out) => wrapMpstat(out),
     ],
 });
@@ -87,44 +87,6 @@ export const showPulseaudioFixed = Variable(false);
 export const showPulseaudio = Variable(false);
 
 // ...
-
-export const NETWORK = Variable(null, {
-    poll: [
-        2000,
-        `jc iwconfig ${conf.network.interface}`,
-        (out) => {
-            let data: {
-                name: string;
-                protocol: string;
-                essid: string;
-                mode: string;
-                frequency: number;
-                frequency_unit: string;
-                access_point: string;
-                bit_rate: number;
-                bit_rate_unit: string;
-                tx_power: number;
-                tx_power_unit: string;
-                retry_short_limit: number;
-                rts_threshold: boolean;
-                fragment_threshold: boolean;
-                power_management: boolean;
-                link_quality: string;
-                signal_level: number;
-                signal_level_unit: string;
-                rx_invalid_nwid: number;
-                rx_invalid_crypt: number;
-                rx_invalid_frag: number;
-                tx_excessive_retries: number;
-                invalid_misc: number;
-                missed_beacon: number;
-            }[] = JSON.parse(out);
-            if (data.length === 0) return null;
-
-            return Math.round((+data[0].link_quality.split('/')[0] / 70) * 100);
-        },
-    ],
-});
 
 export const showNetwork = Variable(false);
 export const showNetworkFixed = Variable(false);

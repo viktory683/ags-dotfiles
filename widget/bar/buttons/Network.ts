@@ -1,22 +1,25 @@
 import conf from 'ags';
 import { getIconFromArray, term } from 'lib/utils';
-import { NETWORK, showNetwork, showNetworkFixed } from 'lib/variables';
+import { showNetwork, showNetworkFixed } from 'lib/variables';
+import Network from 'resource:///com/github/Aylur/ags/service/network.js';
 import { Revealer } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 import Gtk from '@girs/gtk-3.0';
 import { Widget as Widget_t } from 'types/widgets/widget';
 
-const shouldRevealNet = () => showNetwork.value || showNetworkFixed.value;
+const shouldRevealNetwork = () => showNetwork.value || showNetworkFixed.value;
 
-function revealNet(obj: Revealer<Gtk.Widget, unknown>) {
-    obj.revealChild = shouldRevealNet();
-}
+const revealNetwork = (obj: Revealer<Gtk.Widget, unknown>) => {
+    obj.revealChild = shouldRevealNetwork();
+};
 
-function updateNetworkClasses(obj: Widget_t<unknown>) {
-    obj.toggleClassName('fixed-hover', shouldRevealNet());
+const updateNetworkClasses = (obj: Widget_t<unknown>) => {
+    const isWifiDisabled = Network.wifi.strength < 0;
 
-    obj.toggleClassName('disabled', NETWORK.value === null);
-}
+    obj.toggleClassName('fixed-hover', shouldRevealNetwork());
+
+    obj.toggleClassName('disabled', isWifiDisabled);
+};
 
 export default () =>
     Widget.Button({
@@ -30,8 +33,9 @@ export default () =>
             class_names: ['network'],
             children: [
                 Widget.Label({
-                    label: NETWORK.bind().as((v) =>
-                        v === null
+                    // TODO don't see changes
+                    label: Network.wifi.bind('strength').as((v) =>
+                        v < 0
                             ? conf.network.disabled
                             : getIconFromArray(
                                   // @ts-ignore
@@ -44,16 +48,20 @@ export default () =>
                     transition: 'slide_right',
                     transitionDuration: 500,
                     class_names: ['revealer'],
-                    visible: NETWORK.bind().as((v) => v !== null),
-                    child: Widget.Label().bind('label', NETWORK, 'value', (v) =>
-                        v !== null ? `${v}%` : '',
-                    ),
+                    // TODO don't see changes
+                    visible: Network.wifi.bind('strength').as((v) => v >= 0),
+                    child: Widget.Label({
+                        // TODO don't see changes
+                        label: Network.wifi
+                            .bind('strength')
+                            .as((v) => (v >= 0 ? `${v}%` : '')),
+                    }),
                 })
-                    .hook(showNetwork, revealNet)
-                    .hook(showNetworkFixed, revealNet),
+                    .hook(showNetwork, revealNetwork)
+                    .hook(showNetworkFixed, revealNetwork),
             ],
         }),
     })
         .hook(showNetwork, updateNetworkClasses)
         .hook(showNetworkFixed, updateNetworkClasses)
-        .hook(NETWORK, updateNetworkClasses);
+        .hook(Network, updateNetworkClasses);
