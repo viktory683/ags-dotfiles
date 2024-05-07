@@ -1,16 +1,16 @@
-import App from 'resource:///com/github/Aylur/ags/app.js';
-import { readFile } from 'resource:///com/github/Aylur/ags/utils.js';
 import * as toml from 'toml';
-import { PathReporter } from 'io-ts/PathReporter';
+
 import { isLeft } from 'fp-ts/lib/Either';
 import * as t from 'io-ts';
+import { PathReporter } from 'io-ts/PathReporter';
 
-const rawConfig = readFile(`${App.configDir}/ags.toml`);
-let parsed = toml.parse(rawConfig);
+import { readFile } from 'resource:///com/github/Aylur/ags/utils.js';
+import App from 'resource:///com/github/Aylur/ags/app.js';
 
+// Определение типов для конфигурации
 const Config = t.type({
-    term_launch: t.string, // default to search for term
-    term_launch_hold: t.union([t.string, t.undefined]), // default to search for term but without closing term
+    term_launch: t.string,
+    term_launch_hold: t.union([t.string, t.undefined]),
 
     battery: t.type({
         icons: t.union([t.string, t.array(t.string)]),
@@ -103,20 +103,38 @@ const Config = t.type({
 
 export type Config_t = t.TypeOf<typeof Config>;
 
-const decoded = Config.decode(parsed);
-if (isLeft(decoded)) {
-    throw Error(
-        `Could not validate data: ${PathReporter.report(decoded).join('\n')}`,
-    );
-    // e.g.: Could not validate data: Invalid value "foo" supplied to : { userId: number, name: string }/userId: number
+// Функция для чтения и валидации конфигурации
+function readAndValidateConfig(): Config_t {
+    const rawConfig = readFile(`${App.configDir}/ags.toml`);
+    const parsed = toml.parse(rawConfig);
+
+    const decoded = Config.decode(parsed);
+    if (isLeft(decoded)) {
+        throw new Error(
+            `Invalid configuration: ${formatValidationError(decoded)}`,
+        );
+    }
+
+    const decodedConfig: Config_t = decoded.right;
+
+    // Пост-обработка конфигурации
+    decodedConfig.style.paths.scss = `${App.configDir}${parsed.style?.paths?.scss}`;
+    convertIconsToArray(decodedConfig.battery);
+    convertIconsToArray(decodedConfig.temperature);
+    convertIconsToArray(decodedConfig.network);
+    convertIconsToArray(decodedConfig.volume);
+    normalizeInterval(decodedConfig.cpu.interval);
+    normalizeInterval(decodedConfig.updates.interval);
+
+    return decodedConfig;
 }
 
-const decodedConfig: Config_t = decoded.right;
+// Функция для форматирования сообщения об ошибке валидации
+function formatValidationError(decoded: t.Validation<any>): string {
+    return PathReporter.report(decoded).join('\n');
+}
 
-// config post-process
-
-decodedConfig.style.paths.scss = `${App.configDir}${parsed.style?.paths?.scss}`;
-
+// Функция для преобразования иконок в массив, если они указаны в виде строки
 function convertIconsToArray(decodedConfigProperty: {
     icons: string[] | string;
 }) {
@@ -125,24 +143,16 @@ function convertIconsToArray(decodedConfigProperty: {
     }
 }
 
-convertIconsToArray(decodedConfig.battery);
-convertIconsToArray(decodedConfig.temperature);
-convertIconsToArray(decodedConfig.network);
-convertIconsToArray(decodedConfig.volume);
-
-decodedConfig.cpu.interval = Math.trunc(decodedConfig.cpu.interval / 1000);
-if (decodedConfig.cpu.interval <= 0) {
-    throw Error(`decodedConfig.cpu.interval should be greater than 1000`);
+// Функция для нормализации интервала
+function normalizeInterval(interval: number) {
+    interval = Math.trunc(interval / 1000);
+    if (interval <= 0) {
+        throw new Error(`Interval should be greater than 1000 milliseconds`);
+    }
+    return interval * 1000;
 }
-decodedConfig.cpu.interval = decodedConfig.cpu.interval * 1000;
 
-decodedConfig.updates.interval = Math.trunc(
-    decodedConfig.updates.interval / 1000,
-);
-if (decodedConfig.updates.interval <= 0) {
-    throw Error(`decodedConfig.updates.interval should be greater than 1000`);
-}
-decodedConfig.updates.interval = decodedConfig.updates.interval * 1000;
-// ...
+// Чтение и валидация конфигурации при загрузке приложения
+const config = readAndValidateConfig();
 
-export default decodedConfig;
+export default config;
