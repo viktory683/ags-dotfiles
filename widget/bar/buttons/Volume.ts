@@ -1,17 +1,17 @@
-import { sh, getIconFromArray, term } from 'lib/utils';
+import Gtk from '@girs/gtk-3.0';
 import conf from 'ags';
+import { sh, getIconFromArray, term } from 'lib/utils';
 import { showPulseaudio, showPulseaudioFixed } from 'lib/variables';
 import Audio from 'resource:///com/github/Aylur/ags/service/audio.js';
-import { Revealer } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
-import Gtk from '@girs/gtk-3.0';
-import { Widget as Widget_t } from 'types/widgets/widget'; // TODO `import type ...`?
+import { Widget as Widget_t } from 'types/widgets/widget';
+import { Revealer as Revealer_t } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
 
 const shouldRevealVol = () =>
     (showPulseaudio.value || showPulseaudioFixed.value) &&
     Audio.speaker.volume > 0;
 
-const revealVol = (obj: Revealer<Gtk.Widget, unknown>) => {
+const revealVol = (obj: Revealer_t<Gtk.Widget, unknown>) => {
     obj.revealChild = shouldRevealVol();
 };
 
@@ -41,29 +41,35 @@ export default () =>
             children: [
                 Widget.Label({
                     label: conf.volume.bluetooth,
-                    // TODO don't see changes in default device
-                    visible: Audio.speaker
-                        .bind('name')
-                        .as((v) => v?.includes('bluez')),
-                }),
-                Widget.Label({
-                    // TODO don't see changes if it was muted/unmuted
-                    label: Audio.speaker.bind('volume').as((v) => {
-                        if (Audio.speaker.is_muted) {
-                            return conf.volume.muted;
-                        }
+                }).hook(
+                    Audio,
+                    (self) => {
+                        self.visible =
+                            Audio.speaker.name?.includes('bluez') || false;
+                    },
+                    'speaker-changed',
+                ),
+                Widget.Label().hook(
+                    Audio,
+                    (self) => {
+                        self.label = (() => {
+                            let vol = Math.round(Audio.speaker.volume * 100);
 
-                        const vol = Math.round(v * 100);
-                        if (vol === 0) {
-                            return conf.volume.silent;
-                        }
-
-                        return vol > 100
-                            ? conf.volume.alert
-                            : // @ts-ignore
-                              getIconFromArray(conf.volume.icons, vol);
-                    }),
-                }),
+                            return Audio.speaker.is_muted
+                                ? conf.volume.muted
+                                : vol === 0
+                                ? conf.volume.silent
+                                : vol > 100
+                                ? conf.volume.alert
+                                : getIconFromArray(
+                                      // @ts-ignore
+                                      conf.volume.icons,
+                                      vol,
+                                  );
+                        })();
+                    },
+                    'speaker-changed',
+                ),
                 Widget.Revealer({
                     transition: 'slide_right',
                     class_names: ['revealer'],
@@ -81,11 +87,15 @@ export default () =>
                     children: [
                         Widget.Label({
                             label: conf.volume.bluetooth,
-                            // TODO don't see changes in default device
-                            visible: Audio.microphone
-                                .bind('name')
-                                .as((v) => v?.includes('bluez')),
-                        }),
+                        }).hook(
+                            Audio,
+                            (self) => {
+                                self.visible =
+                                    Audio.microphone.name?.includes('bluez') ||
+                                    false;
+                            },
+                            'microphone-changed',
+                        ),
                         Widget.Label({ label: conf.volume.mic }),
                     ],
                 }),

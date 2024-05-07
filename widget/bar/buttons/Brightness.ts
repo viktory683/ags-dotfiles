@@ -1,7 +1,7 @@
 import { sh } from 'lib/utils';
 import { showBrightness, showBrightnessFixed } from 'lib/variables';
 import conf from 'ags';
-import brightness from 'service/brightness';
+import Backlight from 'service/backlight';
 import { Revealer } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 import Gtk from '@girs/gtk-3.0';
@@ -24,9 +24,9 @@ export default () =>
         on_hover_lost: () => (showBrightness.value = false),
         on_middle_click: () =>
             (showBrightnessFixed.value = !showBrightnessFixed.value),
-        on_scroll_up: () => sh('brightnessctl -e s 1-%'),
-        on_scroll_down: () => sh('brightnessctl -e s 1+%'),
-        visible: brightness.bind('screen_value').as((v) => v < 1),
+        on_scroll_up: () => sh('brightnessctl -s -e s 1-%'),
+        on_scroll_down: () => sh('brightnessctl -s -e s 1+%'),
+        visible: Backlight.bind('screen_value').as((v) => v < 1),
         child: Widget.Box({
             class_names: ['brightness'],
             children: [
@@ -39,7 +39,7 @@ export default () =>
                         vertical: true,
                         inverted: true,
                         class_names: ['progress', 'vertical'],
-                        value: brightness.bind('screen_value'),
+                        value: Backlight.bind('screen_value'),
                     }),
                 })
                     .hook(showBrightness, revealBrightness)

@@ -14,8 +14,7 @@ export const bus_name = App.get_dbus_object_path()?.split('/').slice(-1)[0];
 export const mode = Variable('');
 
 // @ts-ignore
-export const urgent_window_address: Var<undefined | string> =
-    Variable(undefined);
+export const urgent_window_addr: Var<undefined | string> = Variable(undefined);
 // @ts-ignore
 export const urgent_workspace_id: Var<undefined | number> = Variable(undefined);
 
