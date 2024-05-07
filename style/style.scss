@@ -1,48 +1,22 @@
-// top | right | bottom | left
-
+// Colors
 // https://m2.material.io/design/color/dark-theme.html
 $surface: #121212;
-// $surface1dp: rgba($surface, .05);
-// $surface2dp: rgba($surface, .07);
-// $surface3dp: rgba($surface, .08);
-// $surface4dp: rgba($surface, .09);
-// $surface6dp: rgba($surface, .11);
-// $surface8dp: rgba($surface, .12);
-// $surface12dp: rgba($surface, .14);
-// $surface16dp: rgba($surface, .15);
-// $surface24dp: rgba($surface, .16);
-
-// $surface1dp: background-opacity($surface, .05);
-// $surface2dp: background-opacity($surface, .07);
-// $surface3dp: background-opacity($surface, .08);
-// $surface4dp: background-opacity($surface, .09);
-// $surface6dp: background-opacity($surface, .11);
-// $surface8dp: background-opacity($surface, .12);
-// $surface12dp: background-opacity($surface, .14);
-// $surface16dp: background-opacity($surface, .15);
-// $surface24dp: background-opacity($surface, .16);
-
 $surface24_fake: rgb(55, 55, 55);
-
 $foreground: rgba(white, 0.87);
 $disabled: rgba(white, 0.38);
-
 $primary: #bb86fc;
 $primary-variant: #3700b3;
-// $primary4: rgba($primary, .04);
-// $primary8dp: rgba($primary, .12);
 $secondary: #03dac6;
 $error: #cf6679;
-
 $cultured: #f5f5f5;
 $onyx: #404040;
 
+// Keyframes
 @keyframes urgentin {
     from {
         background: $surface;
         color: $foreground;
     }
-
     to {
         background: $error;
         color: black;
@@ -54,44 +28,37 @@ $onyx: #404040;
         background: $error;
         color: black;
     }
-
     to {
         background: $surface;
         color: $foreground;
     }
 }
 
+// Base styles
 * {
-    all: unset; // Unsets everything so you can style everything from scratch
+    all: unset;
     font-family: 'runcat', 'SF Pro Display', 'Font Awesome 6 Pro Solid',
         'Font Awesome 6 Pro Regular', 'Font Awesome 6 Pro Brands';
     font-size: 10.5pt;
-    // border: red solid 1pt;
 }
 
+// Menu styles
 menu {
     border-radius: 6pt;
     background-color: $surface24_fake;
-    // background-color: #121212;
-    padding-top: 1.5pt;
-    padding-bottom: 1.5pt;
+    padding: 1.5pt 0;
 }
 
 menu menuitem {
-    // margin-left: 6pt;
-    // margin-right: 6pt;
-    // margin-top: 3pt;
-    // margin-bottom: 3pt;
-
     padding: 3pt;
     border-radius: 6pt;
-
     &:hover {
         background-color: lighten($surface24_fake, 12%);
         color: lighten($foreground, 12%);
     }
 }
 
+// Window styles
 window.bar {
     color: $foreground;
     background-color: $surface;
@@ -102,15 +69,13 @@ window.bar > * {
     margin: 3pt 1.5pt;
 }
 
-// widget container
 window.bar > * > * > *,
 .workspace {
     margin-left: 1.5pt;
     margin-right: 1.5pt;
     border-radius: 3pt;
-
     &:hover {
-        background-color: lighten($surface, 12);
+        background-color: lighten($surface, 12%);
         color: lighten($foreground, 12%);
     }
 }
@@ -124,10 +89,10 @@ window.bar > * > * > *,
     color: lighten($foreground, 12%);
 }
 
+// State styles
 .urgent {
     background-color: $error;
     color: $surface;
-
     &:hover {
         background-color: lighten($error, 12%);
         color: lighten($surface, 12%);
@@ -137,7 +102,6 @@ window.bar > * > * > *,
 .disabled {
     background-color: lighten($surface, 9%);
     color: $disabled;
-
     &:hover {
         background-color: lighten($surface, 12%);
         color: lighten($disabled, 12%);
@@ -147,12 +111,13 @@ window.bar > * > * > *,
 .workspace.focused {
     background-color: $primary;
     color: $surface;
-
     &:hover {
         background-color: lighten($primary, 12%);
         color: lighten($surface, 12%);
     }
 }
+
+// Common
 
 window.bar > * > * > * > *:not(.workspace),
 .workspace > * {
@@ -164,8 +129,8 @@ window.bar > * > * > * > *:not(.workspace),
 //     border: red solid 1pt;
 // }
 
+// Progress bar styles
 progressbar.vertical {
-    // @include background-opacity($surface, 7%);
     margin: 3pt 0;
 }
 
@@ -184,17 +149,18 @@ progressbar.vertical > trough > progress {
     background-color: $surface;
 }
 
+// Tooltip styles
 tooltip.background {
     background-color: $surface24_fake;
     border-radius: 6pt;
     color: #bfc9db;
 }
 
-// notifications
+// Notification styles
 // TODO
 
 window.notification-popups box.notifications {
-    padding: .5em;
+    padding: 0.5em;
 }
 
 .icon {
@@ -220,7 +186,7 @@ window.notification-popups box.notifications {
     min-width: 350px;
     border-radius: 11px;
     padding: 1em;
-    margin: .5em;
+    margin: 0.5em;
     border: 1px solid $surface24_fake;
     background-color: lighten($surface, 36%);
 }
@@ -239,8 +205,8 @@ window.notification-popups box.notifications {
 }
 
 .actions .action-button {
-    margin: 0 .4em;
-    margin-top: .8em;
+    margin: 0 0.4em;
+    margin-top: 0.8em;
 }
 
 .actions .action-button:first-child {
@@ -250,3 +216,5 @@ window.notification-popups box.notifications {
 .actions .action-button:last-child {
     margin-right: 0;
 }
+
+// top | right | bottom | left
