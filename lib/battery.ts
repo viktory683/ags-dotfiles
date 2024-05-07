@@ -21,6 +21,7 @@ export default async function init() {
             actions: {
                 Игнорировать: () => (ignore_battery.value = true),
             },
+            timeout: 5000,
         });
     });
 }

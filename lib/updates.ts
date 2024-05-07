@@ -10,6 +10,7 @@ export default async function init() {
             actions: {
                 Игнорировать: () => updates.stopPoll(),
             },
+            timeout: 5000,
         });
     });
 }

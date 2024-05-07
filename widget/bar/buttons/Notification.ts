@@ -5,7 +5,7 @@ import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 
 export default () =>
     Widget.Button({
-        class_name: 'notification',
+        class_name: 'notifications',
         on_clicked: () => sh('swaync-client -t -sw'),
         on_secondary_click: () => sh('swaync-client -d -sw'),
         child: Widget.Label({

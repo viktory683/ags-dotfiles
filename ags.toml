@@ -89,3 +89,6 @@ none = ''
 [updates]
 icon = ''         # 
 interval = 3600000
+
+[notifications]
+exclude = ['Spotify']

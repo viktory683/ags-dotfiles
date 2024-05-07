@@ -99,6 +99,13 @@ const Config = t.type({
         icon: t.string,
         interval: t.number,
     }),
+
+    notifications: t.union([
+        t.undefined,
+        t.type({
+            exclude: t.union([t.undefined, t.array(t.string)]),
+        }),
+    ]),
 });
 
 export type Config_t = t.TypeOf<typeof Config>;
@@ -125,6 +132,12 @@ function readAndValidateConfig(): Config_t {
     convertIconsToArray(decodedConfig.volume);
     normalizeInterval(decodedConfig.cpu.interval);
     normalizeInterval(decodedConfig.updates.interval);
+
+    if (decodedConfig.notifications?.exclude === undefined)
+        decodedConfig.notifications = {
+            exclude: [],
+        };
+    // decodedConfig.notifications.exclude = [];
 
     return decodedConfig;
 }

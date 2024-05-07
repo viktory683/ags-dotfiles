@@ -17,7 +17,7 @@ import RunCat from './buttons/RunCat';
 
 const Expander = () => Widget.Box({ expand: true });
 
-export default (monitor: number) =>
+export default (monitor: number = 0) =>
     Widget.Window({
         class_name: 'bar',
         child: Widget.CenterBox({
