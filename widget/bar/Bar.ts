@@ -5,6 +5,7 @@ import Mode from './buttons/Mode';
 import SysTray from './buttons/SysTray';
 import Language from './buttons/Language';
 import Temperature from './buttons/Temperature';
+import Updates from './buttons/Updates';
 import Memory from './buttons/Memory';
 import CPU from './buttons/CPU';
 import Brightness from './buttons/Brightness';
@@ -32,6 +33,7 @@ export default (monitor: number) =>
                     Expander(),
                     SysTray(),
                     RunCat(),
+                    Updates(),
                     Language(),
                     Temperature(),
                     Memory(),

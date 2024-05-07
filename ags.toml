@@ -85,3 +85,7 @@ none = ''
 'inhibited-none' = ''
 'dnd-inhibited-notification' = "<span foreground='#cf6679'><sup></sup></span>"
 'dnd-inhibited-none' = ''
+
+[updates]
+icon = ''         # 
+interval = 3600000

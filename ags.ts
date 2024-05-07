@@ -10,6 +10,7 @@ let parsed = toml.parse(rawConfig);
 
 const Config = t.type({
     term_launch: t.string, // default to search for term
+    term_launch_hold: t.union([t.string, t.undefined]), // default to search for term but without closing term
 
     battery: t.type({
         icons: t.union([t.string, t.array(t.string)]),
@@ -93,6 +94,11 @@ const Config = t.type({
             debug: null,
         }),
     }),
+
+    updates: t.type({
+        icon: t.string,
+        interval: t.number,
+    }),
 });
 
 export type Config_t = t.TypeOf<typeof Config>;
@@ -130,6 +136,13 @@ if (decodedConfig.cpu.interval <= 0) {
 }
 decodedConfig.cpu.interval = decodedConfig.cpu.interval * 1000;
 
+decodedConfig.updates.interval = Math.trunc(
+    decodedConfig.updates.interval / 1000,
+);
+if (decodedConfig.updates.interval <= 0) {
+    throw Error(`decodedConfig.updates.interval should be greater than 1000`);
+}
+decodedConfig.updates.interval = decodedConfig.updates.interval * 1000;
 // ...
 
 export default decodedConfig;

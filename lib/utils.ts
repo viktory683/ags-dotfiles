@@ -65,11 +65,21 @@ export function getIconFromArray<T>(
 
 /**
  * Launches a command in the terminal.
- * @param {string} command - Command and args to execute.
+ * @param {string} command - Command and arguments to execute.
+ * @param {boolean} [hold=false] - If true, holds the terminal open after executing the command.
  * @returns {Promise<string>} - A promise resolving to the command output.
  */
-export async function term(command: string): Promise<string> {
-    return sh(`${conf.term_launch} ${command}`);
+export async function term(
+    command: string,
+    hold: boolean = false,
+): Promise<string> {
+    if (hold && conf.term_launch_hold) {
+        return sh(`${conf.term_launch_hold} ${command}`);
+    } else if (!hold && conf.term_launch) {
+        return sh(`${conf.term_launch} ${command}`);
+    } else {
+        return Promise.reject('Terminal launch command not configured.');
+    }
 }
 
 /**

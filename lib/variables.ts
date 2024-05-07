@@ -44,6 +44,19 @@ export const showTemperatureFixed = Variable(false);
 
 // ...
 
+export const updates = Variable(0, {
+    poll: [
+        conf.updates.interval,
+        "bash -c 'checkupdates 2> /dev/null; yay -Qum 2> /dev/null'",
+        (out) => out.split(/\r?\n/).length,
+    ],
+});
+
+export const showUpdates = Variable(false);
+export const showUpdatesFixed = Variable(false);
+
+// ...
+
 export type mem_t = {
     type: string;
     total: number;

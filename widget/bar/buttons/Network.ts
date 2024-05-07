@@ -1,4 +1,3 @@
-import Gtk from '@girs/gtk-3.0';
 import conf from 'ags';
 import { getIconFromArray, term } from 'lib/utils';
 import { showNetwork, showNetworkFixed } from 'lib/variables';
@@ -6,6 +5,7 @@ import Network from 'resource:///com/github/Aylur/ags/service/network.js';
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 import { Widget as Widget_t } from 'types/widgets/widget';
 import { Revealer as Revealer_t } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
+import Gtk from '@girs/gtk-3.0';
 
 const shouldRevealNetwork = () => showNetwork.value || showNetworkFixed.value;
 
