@@ -24,14 +24,13 @@ function updateTempClasses(obj: Widget_t<unknown>) {
 }
 
 export default () =>
-    Widget.Button({
+    Widget.EventBox({
         on_hover: () => (showTemperature.value = true),
         on_hover_lost: () => (showTemperature.value = false),
         on_middle_click: () =>
             (showTemperatureFixed.value = !showTemperatureFixed.value),
-        class_names: ['widget'],
+        class_names: ['widget', 'temperature'],
         child: Widget.Box({
-            class_names: ['temp'],
             children: [
                 Widget.Label({
                     label: TEMPERATURE.bind().as((v) =>
@@ -47,7 +46,6 @@ export default () =>
                 Widget.Revealer({
                     transitionDuration: 500,
                     transition: 'slide_right',
-                    class_names: ['revealer', 'right'],
                     child: Widget.Label({
                         label: TEMPERATURE.bind().as((v) => `${v}º`),
                     }),

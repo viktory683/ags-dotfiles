@@ -17,15 +17,14 @@ const updateUpdatesClasses = (obj: Widget_t<unknown>) => {
 };
 
 export default () =>
-    Widget.Button({
+    Widget.EventBox({
         on_primary_click: () => term('yay', true),
         on_hover: () => (showUpdates.value = true),
         on_hover_lost: () => (showUpdates.value = false),
         on_middle_click: () =>
             (showUpdatesFixed.value = !showUpdatesFixed.value),
-        class_names: ['widget'],
+        class_names: ['widget', 'updates'],
         child: Widget.Box({
-            class_names: ['updates'],
             children: [
                 Widget.Label({
                     label: conf.updates.icon,
@@ -33,7 +32,6 @@ export default () =>
                 Widget.Revealer({
                     transition: 'slide_right',
                     transitionDuration: 500,
-                    class_names: ['revealer'],
                     child: Widget.Label({
                         label: updates.bind('value').as((v) => ` ${v}`),
                     }),

@@ -23,14 +23,13 @@ function updateBatteryClasses(obj: Widget_t<unknown>) {
 }
 
 export default () =>
-    Widget.Button({
+    Widget.EventBox({
         on_hover: () => (showBattery.value = true),
         on_hover_lost: () => (showBattery.value = false),
         on_middle_click: () =>
             (showBatteryFixed.value = !showBatteryFixed.value),
-        class_names: ['widget'],
+        class_names: ['widget', 'battery'],
         child: Widget.Box({
-            class_names: ['battery'],
             children: [
                 Widget.Label().hook(battery, (self) => {
                     if (battery.charging) {
@@ -47,7 +46,6 @@ export default () =>
                 Widget.Revealer({
                     transition: 'slide_right',
                     transitionDuration: 500,
-                    class_names: ['revealer'],
                     child: Widget.Label({
                         label: battery
                             .bind('percent')

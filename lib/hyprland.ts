@@ -1,9 +1,18 @@
 import Hyprland from 'resource:///com/github/Aylur/ags/service/hyprland.js';
-import { lang, urgent_window_addr, urgent_workspace_id } from './variables';
+import {
+    lang,
+    mode,
+    urgent_window_addr,
+    urgent_workspace_id,
+} from 'lib/variables';
 
 export default async function init() {
     Hyprland.connect('keyboard-layout', (_, __, layoutname: string) => {
         lang.value = layoutname;
+    });
+
+    Hyprland.connect('submap', (_, name: string) => {
+        mode.value = name;
     });
 
     // urgency

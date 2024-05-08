@@ -11,7 +11,7 @@ import CPU from './buttons/CPU';
 import Brightness from './buttons/Brightness';
 import Volume from './buttons/Volume';
 import Network from './buttons/Network';
-import Notification from './buttons/Notification';
+// import Notification from './buttons/Notification';
 import Battery from './buttons/Battery';
 import RunCat from './buttons/RunCat';
 
@@ -19,7 +19,7 @@ const Expander = () => Widget.Box({ expand: true });
 
 export default (monitor: number = 0) =>
     Widget.Window({
-        class_name: 'bar',
+        class_name: `statusbar`,
         child: Widget.CenterBox({
             css: 'min-width: 2px; min-height: 2px;',
             start_widget: Widget.Box({
@@ -41,12 +41,12 @@ export default (monitor: number = 0) =>
                     Brightness(),
                     Volume(),
                     Network(),
-                    Notification(),
+                    // Notification(),
                     Battery(),
                 ],
             }),
         }),
-        name: `bar${monitor}`,
+        name: `statusbar${monitor}`,
         anchor: ['top', 'left', 'right'],
         exclusivity: 'exclusive',
         monitor: monitor,

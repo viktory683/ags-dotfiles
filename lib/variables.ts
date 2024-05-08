@@ -116,3 +116,15 @@ export const notification = Variable(
     { text: '', alt: '', tooltip: '', class: '' },
     { listen: ['swaync-client -swb', (out) => JSON.parse(out)] },
 );
+
+// ...
+
+export const runcat = Variable(
+    {},
+    {
+        listen: [
+            'python /home/god/tmp/runcat-text/main.py',
+            (out) => JSON.parse(out),
+        ],
+    },
+);

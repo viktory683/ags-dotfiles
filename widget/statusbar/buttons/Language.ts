@@ -41,12 +41,20 @@ sh('hyprctl devices -j').then((out) => {
 });
 
 export default () =>
-    Widget.Button({
-        on_clicked: () =>
+    Widget.EventBox({
+        on_primary_click: () =>
             Hyprland.messageAsync(
                 'switchxkblayout at-translated-set-2-keyboard next',
             ),
-        class_names: ['widget'],
-        label: lang.bind().as((v) => v && (conf.language.icons[v] || v)),
+        class_names: ['widget', 'language'],
+        child: Widget.Box({
+            children: [
+                Widget.Label({
+                    label: lang
+                        .bind()
+                        .as((v) => v && (conf.language.icons[v] || v)),
+                }),
+            ],
+        }),
         tooltipText: lang.bind(),
     });

@@ -34,7 +34,7 @@ const createMemoryProgressBar = (type: string) =>
     Widget.ProgressBar({
         vertical: true,
         inverted: true,
-        class_names: ['progress', 'vertical'],
+        // class_names: ['progress', 'vertical'],
         value: MEMORY.bind().as((v) => getMemoryPercentage(v, type) / 100),
     });
 
@@ -43,15 +43,13 @@ export default () =>
         on_hover: () => (showMemory.value = true),
         on_hover_lost: () => (showMemory.value = false),
         on_middle_click: () => (showMemoryFixed.value = !showMemoryFixed.value),
-        class_names: ['widget'],
+        class_names: ['widget', 'memory'],
         child: Widget.Box({
-            class_names: ['memory'],
             children: [
                 Widget.Label({ label: conf.memory.icon }),
                 Widget.Revealer({
                     transition: 'slide_right',
                     transitionDuration: 500,
-                    class_names: ['revealer'],
                     child: Widget.Box({
                         children: [
                             createMemoryProgressBar('Mem'),

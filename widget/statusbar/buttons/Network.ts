@@ -22,16 +22,15 @@ const updateNetworkClasses = (obj: Widget_t<unknown>) => {
 };
 
 export default () =>
-    Widget.Button({
+    Widget.EventBox({
         on_primary_click: () => Network.toggleWifi(),
         on_secondary_click: () => term('bluetuith'),
         on_middle_click: () =>
             (showNetworkFixed.value = !showNetworkFixed.value),
         on_hover: () => (showNetwork.value = true),
         on_hover_lost: () => (showNetwork.value = false),
-        class_names: ['widget'],
+        class_names: ['widget', 'network'],
         child: Widget.Box({
-            class_names: ['network'],
             children: [
                 Widget.Label().hook(Network, (self) => {
                     let v = Network.wifi.strength;
@@ -47,7 +46,6 @@ export default () =>
                 Widget.Revealer({
                     transition: 'slide_right',
                     transitionDuration: 500,
-                    class_names: ['revealer'],
                     child: Widget.Label().hook(Network, (self) => {
                         let v = Network.wifi.strength;
                         if (v >= 0) self.label = `${v}%`;

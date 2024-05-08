@@ -27,17 +27,16 @@ const updateVolumeClasses = (obj: Widget_t<unknown>) => {
 };
 
 export default () =>
-    Widget.Button({
+    Widget.EventBox({
         on_clicked: () => sh('pactl set-sink-mute @DEFAULT_SINK@ toggle'),
         on_secondary_click: () => term('rsmixer'),
         on_middle_click: () =>
             (showPulseaudioFixed.value = !showPulseaudioFixed.value),
         on_hover: () => (showPulseaudio.value = true),
         on_hover_lost: () => (showPulseaudio.value = false),
-        class_names: ['widget'],
+        class_names: ['widget', 'volume'],
         child: Widget.Box({
             spacing: 2,
-            class_names: ['pulseaudio'],
             children: [
                 Widget.Label({
                     label: conf.volume.bluetooth,
@@ -72,7 +71,6 @@ export default () =>
                 ),
                 Widget.Revealer({
                     transition: 'slide_right',
-                    class_names: ['revealer'],
                     child: Widget.Label({
                         label: Audio.speaker
                             .bind('volume')

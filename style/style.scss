@@ -59,17 +59,17 @@ menu menuitem {
 }
 
 // Window styles
-window.bar {
+window.statusbar {
     color: $foreground;
     background-color: $surface;
     border-radius: 0 0 6pt 6pt;
 }
 
-window.bar > * {
+window.statusbar > * {
     margin: 3pt 1.5pt;
 }
 
-window.bar > * > * > *,
+window.statusbar > * > * > *,
 .workspace {
     margin-left: 1.5pt;
     margin-right: 1.5pt;
@@ -119,7 +119,7 @@ window.bar > * > * > *,
 
 // Common
 
-window.bar > * > * > * > *:not(.workspace),
+window.statusbar > * > * > * > *:not(.workspace),
 .workspace > * {
     margin: 2pt 4pt;
     // border: blue solid 1pt;

@@ -1,6 +1,6 @@
 import { sh } from 'lib/utils';
 import conf from 'ags';
-import hyprland from 'resource:///com/github/Aylur/ags/service/hyprland.js';
+import Hyprland from 'resource:///com/github/Aylur/ags/service/hyprland.js';
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 import { urgent_workspace_id } from 'lib/variables';
 
@@ -11,20 +11,26 @@ export default (ws: number = 10) =>
     Widget.Box({
         class_names: ['workspaces'],
         children: Array.from({ length: ws }, (_, i) => 1 + i).map((i) =>
-            Widget.Button({
+            Widget.EventBox({
                 on_clicked: () => dispatch(i),
+                class_names: ['widget', 'workspace'],
+                child: Widget.Box({
+                    children: [
+                        Widget.Label({
+                            label:
+                            conf.workspaces.icons[`${i}`] ||
+                            conf.workspaces.icons['default'],
+                        }),
+                    ],
+                }),
                 attribute: i,
-                label:
-                    conf.workspaces.icons[`${i}`] ||
-                    conf.workspaces.icons['default'],
-                class_names: ['workspace', 'widget'],
             }),
         ),
 
         setup: (self) =>
-            self.hook(hyprland, () =>
+            self.hook(Hyprland, () =>
                 self.children.forEach((btn) => {
-                    btn.visible = hyprland.workspaces.some(
+                    btn.visible = Hyprland.workspaces.some(
                         // @ts-ignore
                         (ws) => ws.id === btn.attribute,
                     );
@@ -32,9 +38,9 @@ export default (ws: number = 10) =>
                     // @ts-ignore
                     btn.toggleClassName(
                         'focused',
-                        hyprland.workspaces.some(
+                        Hyprland.workspaces.some(
                             (ws) =>
-                                ws.id === hyprland.active.workspace.id &&
+                                ws.id === Hyprland.active.workspace.id &&
                                 // @ts-ignore
                                 ws.id === btn.attribute,
                         ),

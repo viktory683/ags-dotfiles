@@ -22,19 +22,17 @@ function updateCPUClasses(obj: Widget_t<unknown>) {
 }
 
 export default () =>
-    Widget.Button({
+    Widget.EventBox({
         on_hover: () => (showCpuCores.value = true),
         on_hover_lost: () => (showCpuCores.value = false),
         on_middle_click: () =>
             (showCpuCoresFixed.value = !showCpuCoresFixed.value),
-        on_clicked: () => term('btop'),
-        class_names: ['widget'],
+        on_primary_click: () => term('btop'),
+        class_names: ['widget', 'cpu'],
         child: Widget.Box({
-            class_names: ['cpu'],
             children: [
                 Widget.Label({ label: conf.cpu.icon }),
                 Widget.Revealer({
-                    class_names: ['revealer'],
                     transition: 'slide_right',
                     transitionDuration: 500,
                     child: Widget.Box({
@@ -42,7 +40,7 @@ export default () =>
                             Widget.ProgressBar({
                                 vertical: true,
                                 inverted: true,
-                                class_names: ['progress', 'vertical'],
+                                // class_names: ['progress', 'vertical'],
                                 value: cpu
                                     .bind()
                                     .as(

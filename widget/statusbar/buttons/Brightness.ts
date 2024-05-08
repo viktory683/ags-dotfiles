@@ -19,7 +19,7 @@ function updateBrightnessClasses(obj: Widget_t<unknown>) {
 }
 
 export default () =>
-    Widget.Button({
+    Widget.EventBox({
         on_hover: () => (showBrightness.value = true),
         on_hover_lost: () => (showBrightness.value = false),
         on_middle_click: () =>
@@ -27,18 +27,17 @@ export default () =>
         on_scroll_up: () => sh('brightnessctl -s -e s 1-%'),
         on_scroll_down: () => sh('brightnessctl -s -e s 1+%'),
         visible: Backlight.bind('screen_value').as((v) => v < 1),
+        class_names: ['widget', 'brightness'],
         child: Widget.Box({
-            class_names: ['brightness'],
             children: [
                 Widget.Label({ label: conf.brightness.icon }),
                 Widget.Revealer({
                     transition: 'slide_right',
                     transitionDuration: 500,
-                    class_names: ['revealer'],
                     child: Widget.ProgressBar({
                         vertical: true,
                         inverted: true,
-                        class_names: ['progress', 'vertical'],
+                        // class_names: ['progress', 'vertical'],
                         value: Backlight.bind('screen_value'),
                     }),
                 })
