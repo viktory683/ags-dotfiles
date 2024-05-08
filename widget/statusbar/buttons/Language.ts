@@ -1,7 +1,7 @@
 import Hyprland from 'resource:///com/github/Aylur/ags/service/hyprland.js';
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 import conf from 'ags';
-import { sh } from 'lib/utils';
+import { EventBox, sh } from 'lib/utils';
 import { lang } from 'lib/variables';
 
 interface Mouse {
@@ -41,20 +41,18 @@ sh('hyprctl devices -j').then((out) => {
 });
 
 export default () =>
-    Widget.EventBox({
+    EventBox({
         on_primary_click: () =>
             Hyprland.messageAsync(
                 'switchxkblayout at-translated-set-2-keyboard next',
             ),
         class_names: ['widget', 'language'],
-        child: Widget.Box({
-            children: [
-                Widget.Label({
-                    label: lang
-                        .bind()
-                        .as((v) => v && (conf.language.icons[v] || v)),
-                }),
-            ],
-        }),
+        children: [
+            Widget.Label({
+                label: lang
+                    .bind()
+                    .as((v) => v && (conf.language.icons[v] || v)),
+            }),
+        ],
         tooltipText: lang.bind(),
     });

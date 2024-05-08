@@ -4,6 +4,7 @@ import { MEMORY, mem_t, showMemory, showMemoryFixed } from 'lib/variables';
 import { Revealer } from 'resource:///com/github/Aylur/ags/widgets/revealer.js';
 import Gtk from '@girs/gtk-3.0';
 import { Widget as Widget_t } from 'types/widgets/widget';
+import { EventBox } from 'lib/utils';
 
 const shouldRevealMem = () => showMemory.value || showMemoryFixed.value;
 
@@ -39,28 +40,26 @@ const createMemoryProgressBar = (type: string) =>
     });
 
 export default () =>
-    Widget.Button({
+    EventBox({
         on_hover: () => (showMemory.value = true),
         on_hover_lost: () => (showMemory.value = false),
         on_middle_click: () => (showMemoryFixed.value = !showMemoryFixed.value),
         class_names: ['widget', 'memory'],
-        child: Widget.Box({
-            children: [
-                Widget.Label({ label: conf.memory.icon }),
-                Widget.Revealer({
-                    transition: 'slide_right',
-                    transitionDuration: 500,
-                    child: Widget.Box({
-                        children: [
-                            createMemoryProgressBar('Mem'),
-                            createMemoryProgressBar('Swap'),
-                        ],
-                    }),
-                })
-                    .hook(showMemory, revealMem)
-                    .hook(showMemoryFixed, revealMem),
-            ],
-        }),
+        children: [
+            Widget.Label({ label: conf.memory.icon }),
+            Widget.Revealer({
+                transition: 'slide_right',
+                transitionDuration: 500,
+                child: Widget.Box({
+                    children: [
+                        createMemoryProgressBar('Mem'),
+                        createMemoryProgressBar('Swap'),
+                    ],
+                }),
+            })
+                .hook(showMemory, revealMem)
+                .hook(showMemoryFixed, revealMem),
+        ],
     })
         .hook(showMemory, updateMemoryClasses)
         .hook(showMemoryFixed, updateMemoryClasses)

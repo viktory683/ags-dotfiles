@@ -1,4 +1,4 @@
-import { sh } from 'lib/utils';
+import { EventBox, sh } from 'lib/utils';
 import conf from 'ags';
 import Hyprland from 'resource:///com/github/Aylur/ags/service/hyprland.js';
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
@@ -11,18 +11,16 @@ export default (ws: number = 10) =>
     Widget.Box({
         class_names: ['workspaces'],
         children: Array.from({ length: ws }, (_, i) => 1 + i).map((i) =>
-            Widget.EventBox({
+            EventBox({
                 on_clicked: () => dispatch(i),
                 class_names: ['widget', 'workspace'],
-                child: Widget.Box({
-                    children: [
-                        Widget.Label({
-                            label:
+                children: [
+                    Widget.Label({
+                        label:
                             conf.workspaces.icons[`${i}`] ||
                             conf.workspaces.icons['default'],
-                        }),
-                    ],
-                }),
+                    }),
+                ],
                 attribute: i,
             }),
         ),

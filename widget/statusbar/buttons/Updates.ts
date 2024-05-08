@@ -1,5 +1,5 @@
 import conf from 'ags';
-import { term } from 'lib/utils';
+import { EventBox, term } from 'lib/utils';
 import { showUpdates, showUpdatesFixed, updates } from 'lib/variables';
 import Widget from 'resource:///com/github/Aylur/ags/widget.js';
 import { Widget as Widget_t } from 'types/widgets/widget';
@@ -17,29 +17,27 @@ const updateUpdatesClasses = (obj: Widget_t<unknown>) => {
 };
 
 export default () =>
-    Widget.EventBox({
+    EventBox({
         on_primary_click: () => term('yay', true),
         on_hover: () => (showUpdates.value = true),
         on_hover_lost: () => (showUpdates.value = false),
         on_middle_click: () =>
             (showUpdatesFixed.value = !showUpdatesFixed.value),
         class_names: ['widget', 'updates'],
-        child: Widget.Box({
-            children: [
-                Widget.Label({
-                    label: conf.updates.icon,
+        children: [
+            Widget.Label({
+                label: conf.updates.icon,
+            }),
+            Widget.Revealer({
+                transition: 'slide_right',
+                transitionDuration: 500,
+                child: Widget.Label({
+                    label: updates.bind('value').as((v) => ` ${v}`),
                 }),
-                Widget.Revealer({
-                    transition: 'slide_right',
-                    transitionDuration: 500,
-                    child: Widget.Label({
-                        label: updates.bind('value').as((v) => ` ${v}`),
-                    }),
-                })
-                    .hook(showUpdates, revealUpdates)
-                    .hook(showUpdatesFixed, revealUpdates),
-            ],
-        }),
+            })
+                .hook(showUpdates, revealUpdates)
+                .hook(showUpdatesFixed, revealUpdates),
+        ],
         visible: updates.bind('value').as((v) => v > 0),
     })
         .hook(showUpdates, updateUpdatesClasses)

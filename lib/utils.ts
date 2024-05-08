@@ -106,3 +106,17 @@ export function wrapMpstat(out: string): { avg: any; cores: any[] } {
             ),
     };
 }
+
+export const EventBox = ({ ...props }) => {
+    props.child = Widget.Box({
+        children: props.children,
+    });
+    delete props.children;
+
+    if (props.spacing) {
+        props.child.spacing = props.spacing;
+        delete props.spacing;
+    }
+
+    return Widget.EventBox(props);
+};
