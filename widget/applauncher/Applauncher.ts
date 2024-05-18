@@ -1,3 +1,4 @@
+import conf from 'ags';
 import Applications from 'resource:///com/github/Aylur/ags/service/applications.js';
 import { Application } from 'types/service/applications';
 import Gtk from '@girs/gtk-3.0';
@@ -7,30 +8,25 @@ const WINDOW_NAME = 'applauncher';
 const launch = (flowBox: Gtk.FlowBox, child: Gtk.FlowBoxChild) => {
     App.toggleWindow(WINDOW_NAME);
     // @ts-ignore
-    let _app: { app: Application } = child.child.attribute;
-    _app.app.launch();
+    let app: Application = child.child.attribute.app;
+    app.launch();
     flowBox.invalidate_sort();
 };
 
-const AppItem = (
-    app: Application,
-    iconSize: number = 64, // TODO move to config
-    maxChars: number = 16, // TODO move to config
-) =>
+const AppItem = (app: Application) =>
     Widget.Box({
         attribute: { app },
         vertical: true,
-
         children: [
             Widget.Icon({
                 icon: app.icon_name || '',
-                size: iconSize,
+                size: conf.launcher.iconSize,
             }),
             Widget.Label({
                 class_name: 'title',
                 label: app.name,
                 xalign: 0,
-                maxWidthChars: maxChars,
+                maxWidthChars: conf.launcher.maxChars,
                 vpack: 'center',
                 hpack: 'center',
                 truncate: 'end',
@@ -38,17 +34,12 @@ const AppItem = (
         ],
     });
 
-const AppsBox = (
-    width: number = 500,
-    height: number = 500,
-    spacing: number = 12,
-) => {
-    let apps = Applications.list.map((app) => AppItem(app));
+const AppsBox = () => {
+    const apps = Applications.list.map(AppItem);
 
     const flowBox = Widget.FlowBox({
-        setup: (self) => {
+        setup: (self: Gtk.FlowBox) => {
             apps.forEach((app) => self.add(app));
-
             self.set_sort_func(
                 (a, b) =>
                     // @ts-ignore
@@ -61,54 +52,44 @@ const AppsBox = (
 
     flowBox.connect('child-activated', launch);
 
-    // search entry
     const entry = Widget.Entry({
         hexpand: true,
-        css: `margin-bottom: ${spacing}px;`,
-        placeholderText: ' Search', // TODO move to config
-
-        // to launch the first item on Enter
+        css: `margin-bottom: ${conf.launcher.spacing}px;`,
+        placeholderText: conf.launcher.placeholderText,
         on_accept: () => {
-            let fb_child = flowBox.get_child_at_pos(0, 0);
-            if (fb_child) launch(flowBox, fb_child);
+            const fbChild = flowBox.get_child_at_pos(0, 0);
+            if (fbChild) launch(flowBox, fbChild);
         },
-
-        // filter out the list
         on_change: ({ text }: { text: string }) => {
-            flowBox.set_filter_func((fb_child) =>
+            flowBox.set_filter_func((fbChild) =>
                 // @ts-ignore
-                fb_child.child.attribute.app.match(text ?? ''),
+                fbChild.child.attribute.app.match(text ?? ''),
             );
         },
     });
 
     return Widget.Box({
         vertical: true,
-        css: `margin: ${spacing * 2}px;`,
+        css: `margin: ${conf.launcher.spacing * 2}px;`,
         children: [
             entry,
-
-            // wrap the list in a scrollable
             Widget.Scrollable({
                 hscroll: 'never',
-                css: `min-width: ${width}px;` + `min-height: ${height}px;`,
+                css: `min-width: ${conf.launcher.width}px; min-height: ${conf.launcher.height}px;`,
                 child: flowBox,
             }),
         ],
         setup: (self) =>
             self.hook(App, (_, windowName, visible) => {
                 if (windowName !== WINDOW_NAME) return;
-
-                // when the applauncher shows up
-                if (visible) {
-                    entry.text = ''; // TODO make it depend from config like "should we clear search on open?"
+                if (visible && conf.launcher.clearSearchOnOpen) {
+                    entry.text = '';
                     entry.grab_focus();
                 }
             }),
     });
 };
 
-// there needs to be only one instance
 export const Applauncher = Widget.Window({
     name: WINDOW_NAME,
     setup: (self) =>
@@ -117,8 +98,7 @@ export const Applauncher = Widget.Window({
     visible: false,
     keymode: 'exclusive', // 'on-demand',
     class_names: ['applauncher'],
-    // anchor: ['top', 'left'],
-    child: AppsBox(750, 500), // TODO move to config
+    child: AppsBox(),
 });
 
 // TODO styles

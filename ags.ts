@@ -106,6 +106,16 @@ const Config = t.type({
             exclude: t.union([t.undefined, t.array(t.string)]),
         }),
     ]),
+
+    launcher: t.type({
+        iconSize: t.number,
+        maxChars: t.number,
+        width: t.number,
+        height: t.number,
+        spacing: t.number,
+        placeholderText: t.string,
+        clearSearchOnOpen: t.boolean,
+    }),
 });
 
 export type Config_t = t.TypeOf<typeof Config>;

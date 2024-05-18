@@ -92,3 +92,12 @@ interval = 3600000
 
 [notifications]
 exclude = ['Spotify']
+
+[launcher]
+iconSize = 64
+maxChars = 16
+width = 750
+height = 500
+spacing = 12
+placeholderText = ' Search'
+clearSearchOnOpen = true
