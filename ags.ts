@@ -1,181 +1,168 @@
 import * as toml from 'toml';
-
-import { isLeft } from 'fp-ts/lib/Either';
-import * as t from 'io-ts';
-import { PathReporter } from 'io-ts/PathReporter';
-
+import { z } from 'zod';
 import { readFile } from 'resource:///com/github/Aylur/ags/utils.js';
 import App from 'resource:///com/github/Aylur/ags/app.js';
 
-// Определение типов для конфигурации
-const Config = t.type({
-    term_launch: t.string,
-    term_launch_hold: t.union([t.string, t.undefined]),
+// Define the schema for configuration using zod
+const ConfigSchema = z.object({
+    term_launch: z.string(),
+    term_launch_hold: z.string().optional(),
 
-    battery: t.type({
-        icons: t.union([t.string, t.array(t.string)]),
-        charging: t.string,
-        low: t.number,
-        critical_low: t.number,
+    battery: z.object({
+        icons: z.union([z.string(), z.array(z.string())]),
+        charging: z.string(),
+        low: z.number(),
+        critical_low: z.number(),
     }),
 
-    temperature: t.type({
-        icons: t.union([t.string, t.array(t.string)]),
-        alert: t.string,
-        min: t.number,
-        max: t.number,
-        path: t.string,
-        interval: t.number,
+    temperature: z.object({
+        icons: z.union([z.string(), z.array(z.string())]),
+        alert: z.string(),
+        min: z.number(),
+        max: z.number(),
+        path: z.string(),
+        interval: z.number(),
     }),
 
-    memory: t.type({
-        icon: t.string,
-        alert: t.number,
-        interval: t.number,
+    memory: z.object({
+        icon: z.string(),
+        alert: z.number(),
+        interval: z.number(),
     }),
 
-    cpu: t.type({
-        icon: t.string,
-        alert: t.number,
-        interval: t.number,
+    cpu: z.object({
+        icon: z.string(),
+        alert: z.number(),
+        interval: z.number(),
     }),
 
-    brightness: t.type({
-        icon: t.string,
+    brightness: z.object({
+        icon: z.string(),
     }),
 
-    network: t.type({
-        icons: t.union([t.string, t.array(t.string)]),
-        disabled: t.string,
-        interface: t.string,
+    network: z.object({
+        icons: z.union([z.string(), z.array(z.string())]),
+        disabled: z.string(),
+        interface: z.string(),
     }),
 
-    volume: t.type({
-        icons: t.union([t.string, t.array(t.string)]),
-        bluetooth: t.string,
-        muted: t.string,
-        silent: t.string,
-        alert: t.string,
-        mic: t.string,
+    volume: z.object({
+        icons: z.union([z.string(), z.array(z.string())]),
+        bluetooth: z.string(),
+        muted: z.string(),
+        silent: z.string(),
+        alert: z.string(),
+        mic: z.string(),
     }),
 
-    scratchpad: t.type({
-        icon: t.string,
+    scratchpad: z.object({
+        icon: z.string(),
     }),
 
-    workspaces: t.type({
-        icons: t.record(t.string, t.string),
-        default: t.string,
+    workspaces: z.object({
+        icons: z.record(z.string(), z.string()),
+        default: z.string(),
     }),
 
-    notification: t.type({
-        icons: t.record(t.string, t.string),
+    notification: z.object({
+        icons: z.record(z.string(), z.string()),
     }),
 
-    language: t.type({
-        icons: t.record(t.string, t.string),
+    language: z.object({
+        icons: z.record(z.string(), z.string()),
     }),
 
-    style: t.type({
-        paths: t.type({
-            scss: t.string,
-            css: t.string,
+    style: z.object({
+        paths: z.object({
+            scss: z.string(),
+            css: z.string(),
         }),
     }),
 
-    clock: t.type({
-        time: t.string,
-        date: t.string,
+    clock: z.object({
+        time: z.string(),
+        date: z.string(),
     }),
 
-    log: t.type({
-        level: t.keyof({
-            info: null,
-            debug: null,
-        }),
+    log: z.object({
+        level: z.enum(['info', 'debug']),
     }),
 
-    updates: t.type({
-        icon: t.string,
-        interval: t.number,
+    updates: z.object({
+        icon: z.string(),
+        interval: z.number(),
     }),
 
-    notifications: t.union([
-        t.undefined,
-        t.type({
-            exclude: t.union([t.undefined, t.array(t.string)]),
-        }),
-    ]),
+    notifications: z
+        .object({
+            exclude: z.array(z.string()).optional(),
+        })
+        .optional(),
 
-    launcher: t.type({
-        iconSize: t.number,
-        maxChars: t.number,
-        width: t.number,
-        height: t.number,
-        spacing: t.number,
-        placeholderText: t.string,
-        clearSearchOnOpen: t.boolean,
+    launcher: z.object({
+        iconSize: z.number(),
+        maxChars: z.number(),
+        width: z.number(),
+        height: z.number(),
+        spacing: z.number(),
+        placeholderText: z.string(),
+        clearSearchOnOpen: z.boolean(),
     }),
 });
 
-export type Config_t = t.TypeOf<typeof Config>;
+export type ConfigType = z.infer<typeof ConfigSchema>;
 
-// Функция для чтения и валидации конфигурации
-function readAndValidateConfig(): Config_t {
+// Function to read and validate the configuration
+function readAndValidateConfig(): ConfigType {
     const rawConfig = readFile(`${App.configDir}/ags.toml`);
-    const parsed = toml.parse(rawConfig);
+    const parsedConfig = toml.parse(rawConfig);
 
-    const decoded = Config.decode(parsed);
-    if (isLeft(decoded)) {
-        throw new Error(
-            `Invalid configuration: ${formatValidationError(decoded)}`,
+    const result = ConfigSchema.safeParse(parsedConfig);
+    if (!result.success) {
+        throw new Error(`Invalid configuration: ${result.error.message}`);
+    }
+
+    const config = result.data;
+
+    // Post-process the configuration
+    config.style.paths.scss = `${App.configDir}${config.style.paths.scss}`;
+
+    const iconFields = [
+        'battery.icons',
+        'temperature.icons',
+        'network.icons',
+        'volume.icons',
+    ];
+    iconFields.forEach((field) => {
+        const keys = field.split('.');
+        config[keys[0]][keys[1]] = convertIconsToArray(
+            config[keys[0]][keys[1]],
         );
+    });
+
+    config.cpu.interval = normalizeInterval(config.cpu.interval);
+    config.updates.interval = normalizeInterval(config.updates.interval);
+
+    config.notifications = config.notifications || { exclude: [] };
+
+    return config;
+}
+
+// Function to convert icons to array if they are in string format
+function convertIconsToArray(icons: string | string[]): string[] {
+    return typeof icons === 'string' ? icons.split('') : icons;
+}
+
+// Function to normalize interval
+function normalizeInterval(interval: number): number {
+    const normalized = Math.trunc(interval / 1000) * 1000;
+    if (normalized <= 1000) {
+        throw new Error('Interval should be greater than 1000 milliseconds');
     }
-
-    const decodedConfig: Config_t = decoded.right;
-
-    // Пост-обработка конфигурации
-    decodedConfig.style.paths.scss = `${App.configDir}${parsed.style?.paths?.scss}`;
-    convertIconsToArray(decodedConfig.battery);
-    convertIconsToArray(decodedConfig.temperature);
-    convertIconsToArray(decodedConfig.network);
-    convertIconsToArray(decodedConfig.volume);
-    normalizeInterval(decodedConfig.cpu.interval);
-    normalizeInterval(decodedConfig.updates.interval);
-
-    if (decodedConfig.notifications?.exclude === undefined)
-        decodedConfig.notifications = {
-            exclude: [],
-        };
-    // decodedConfig.notifications.exclude = [];
-
-    return decodedConfig;
+    return normalized;
 }
 
-// Функция для форматирования сообщения об ошибке валидации
-function formatValidationError(decoded: t.Validation<any>): string {
-    return PathReporter.report(decoded).join('\n');
-}
-
-// Функция для преобразования иконок в массив, если они указаны в виде строки
-function convertIconsToArray(decodedConfigProperty: {
-    icons: string[] | string;
-}) {
-    if (typeof decodedConfigProperty.icons === 'string') {
-        decodedConfigProperty.icons = decodedConfigProperty.icons.split('');
-    }
-}
-
-// Функция для нормализации интервала
-function normalizeInterval(interval: number) {
-    interval = Math.trunc(interval / 1000);
-    if (interval <= 0) {
-        throw new Error(`Interval should be greater than 1000 milliseconds`);
-    }
-    return interval * 1000;
-}
-
-// Чтение и валидация конфигурации при загрузке приложения
+// Read and validate configuration on application load
 const config = readAndValidateConfig();
 
 export default config;

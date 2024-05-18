@@ -5,10 +5,8 @@
         "url": "https://github.com/viktory683/ags-dotfiles.git"
     },
     "dependencies": {
-        "fp-ts": "^2.16.2",
-        "io-ts": "^2.2.21",
-        "io-ts-types": "^0.5.19",
-        "toml": "^3.0.0"
+        "toml": "^3.0.0",
+        "zod": "^3.22.4"
     },
     "devDependencies": {
         "@girs/cairo-1.0": "^1.0.0-3.2.8",
