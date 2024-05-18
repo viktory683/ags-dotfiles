@@ -4,6 +4,7 @@ import { forMonitors, sh } from 'lib/utils';
 import { init } from 'lib/init';
 import StatusBar from 'widget/statusbar/StatusBar';
 import NotificationPopups from 'widget/notifications/NotificationPopups';
+import { Applauncher } from 'widget/applauncher/Applauncher';
 
 sh(`touch ${conf.style.paths.css}`);
 
@@ -13,5 +14,9 @@ export default App.config({
     },
     style: conf.style.paths.css,
 
-    windows: [...forMonitors(StatusBar), ...forMonitors(NotificationPopups)],
+    windows: [
+        ...forMonitors(StatusBar),
+        ...forMonitors(NotificationPopups),
+        Applauncher,
+    ],
 });

@@ -59,9 +59,13 @@ menu menuitem {
 }
 
 // Window styles
-window.statusbar {
+window:not(.notification-popups) {
     color: $foreground;
     background-color: $surface;
+    border-radius: 6pt;
+}
+
+window.statusbar {
     border-radius: 0 0 6pt 6pt;
 }
 
@@ -179,12 +183,12 @@ window.notification-popups box.notifications {
 .icon box {
     min-width: 68px;
     min-height: 68px;
-    border-radius: 7px;
+    border-radius: 6pt;
 }
 
 .notification {
     min-width: 350px;
-    border-radius: 11px;
+    border-radius: 12pt;
     padding: 1em;
     margin: 0.5em;
     border: 1px solid $surface24_fake;
@@ -197,7 +201,7 @@ window.notification-popups box.notifications {
 
 .title {
     color: $foreground;
-    font-size: 1.4em;
+    font-size: 10pt;
 }
 
 .body {
@@ -215,6 +219,13 @@ window.notification-popups box.notifications {
 
 .actions .action-button:last-child {
     margin-right: 0;
+}
+
+*:focus {
+    // color: blue;
+    // background-color: yellow;
+    border: $error solid 1pt;
+    border-radius: 3pt;
 }
 
 // top | right | bottom | left
