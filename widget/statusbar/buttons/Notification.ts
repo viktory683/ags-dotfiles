@@ -13,7 +13,7 @@ const updateNotificationClasses = (obj: Widget_t<unknown>) => {
 
 export default () =>
     EventBox({
-        on_clicked: () => sh('swaync-client -t -sw'),
+        on_primary_click: () => sh('swaync-client -t -sw'),
         on_secondary_click: () => sh('swaync-client -d -sw'),
         class_names: ['widget', 'notifications'],
         children: [

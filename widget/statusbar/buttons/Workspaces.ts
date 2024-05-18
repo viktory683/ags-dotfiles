@@ -12,7 +12,7 @@ export default (ws: number = 10) =>
         class_names: ['workspaces'],
         children: Array.from({ length: ws }, (_, i) => 1 + i).map((i) =>
             EventBox({
-                on_clicked: () => dispatch(i),
+                on_primary_click: () => dispatch(i),
                 class_names: ['widget', 'workspace'],
                 children: [
                     Widget.Label({
