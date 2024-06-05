@@ -135,7 +135,9 @@ function readAndValidateConfig(): ConfigType {
     ];
     iconFields.forEach((field) => {
         const keys = field.split('.');
+        // @ts-ignore
         config[keys[0]][keys[1]] = convertIconsToArray(
+            // @ts-ignore
             config[keys[0]][keys[1]],
         );
     });
@@ -156,7 +158,7 @@ function convertIconsToArray(icons: string | string[]): string[] {
 // Function to normalize interval
 function normalizeInterval(interval: number): number {
     const normalized = Math.trunc(interval / 1000) * 1000;
-    if (normalized <= 1000) {
+    if (normalized < 1000) {
         throw new Error('Interval should be greater than 1000 milliseconds');
     }
     return normalized;

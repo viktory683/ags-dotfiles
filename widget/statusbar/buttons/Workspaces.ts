@@ -19,7 +19,18 @@ export default (ws: number = 10) =>
                         label:
                             conf.workspaces.icons[`${i}`] ||
                             conf.workspaces.icons['default'],
-                    }),
+                        attribute:
+                            conf.workspaces.icons[`${i}`] ||
+                            conf.workspaces.icons['default'],
+                    }).hook(
+                        Hyprland,
+                        (self, name: string, data: string) => {
+                            if (name !== 'renameworkspace') return;
+                            let wname = data.split(',')[1];
+                            if (wname) self.label = wname;
+                        },
+                        'event',
+                    ),
                 ],
                 attribute: i,
             }),
